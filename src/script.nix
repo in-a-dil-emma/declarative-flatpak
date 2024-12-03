@@ -2,7 +2,7 @@
 , is-system-install, extra-flatpak-flags ? [] }:
 
 let
-  inherit (pkgs) coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
+  inherit (pkgs) curl coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
   inherit (lib) makeBinPath;
 
   inherit (import ./lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
@@ -18,12 +18,12 @@ writeShellScript "setup-flatpaks" ''
   set -v
   '' else ""}
   
-  PATH=${makeBinPath [ coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}
+  PATH=${makeBinPath [ curl coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}
   
   ${if cfg.waitForInternet then ''
   # Failsafe
   _count=0
-  until ping -c1 github.com &>/dev/null; do
+  until curl -fsS github.com &>/dev/null; do
     if [ $_count -ge 60 ]; then
       echo "failed to acquire an internet connection in 60 seconds."
       exit 1
