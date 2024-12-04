@@ -2,7 +2,7 @@
 , is-system-install, extra-flatpak-flags ? [] }:
 
 let
-  inherit (pkgs) curl coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
+  inherit (pkgs) curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
   inherit (lib) makeBinPath;
 
   inherit (import ./lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
@@ -18,7 +18,7 @@ writeShellScript "setup-flatpaks" ''
   set -v
   '' else ""}
   
-  PATH=${makeBinPath [ curl coreutils util-linux inetutils gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}
+  PATH=${makeBinPath [ curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}
   
   ${if cfg.waitForInternet then ''
   # Failsafe
