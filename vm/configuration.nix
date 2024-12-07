@@ -30,13 +30,13 @@
 
       "flathub:runtime/org.gtk.Gtk3theme.Breeze//3.22"
 
-      "flathub:${./io.gitlab.daikhan.stable.flatpakref}"
-      ":${./xwaylandvideobridge.flatpak}"
+      "flathub:${./files/io.gitlab.daikhan.stable.flatpakref}"
+      ":${./files/xwaylandvideobridge.flatpak}"
     ];
     remotes = {
       "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
       "flathub-beta" = "https://flathub.org/beta-repo/flathub-beta.flatpakrepo";
-      "launcher-moe" = ./gol.launcher.moe.flatpakrepo;
+      "launcher-moe" = ./files/gol.launcher.moe.flatpakrepo;
     };
     overrides = {
       "org.mozilla.firefox" = {
