@@ -58,11 +58,7 @@ in
       $DRY_RUN_CMD systemctl is-system-running -q && \
         systemctl --user daemon-reload || true
       $DRY_RUN_CMD systemctl is-system-running -q && \
-        systemctl --user enable manage-user-flatpaks || true
-      ${if cfg.onCalendar != null then ''
-      $DRY_RUN_CMD systemctl is-system-running -q && \
-        systemctl --user start manage-user-flatpaks || true
-      '' else ""}
+        systemctl --user enable --now manage-user-flatpaks || true
     '';
   };
 
