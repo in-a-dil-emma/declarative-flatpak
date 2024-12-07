@@ -1,13 +1,19 @@
 { pkgs, ... }: {
-  nixos-shell.mounts = {
-    mountHome = false;
-    mountNixProfile = false;
-  };
-
   virtualisation = {
+    graphics = false;
     cores = 8;
     memorySize = 8096 * 2;
     diskSize = 64 * 1024;
+    qemu = {
+      consoles = [ "tty0" "hvc0" ];
+      options = [
+        "-serial null"
+        "-device virtio-serial"
+        "-chardev stdio,mux=on,id=char0,signal=off"
+        "-mon chardev=char0,mode=readline"
+        "-device virtconsole,chardev=char0,nr=0"
+      ];
+    };
   };
 
   boot.kernelParams = [ "loglevel=3" "quiet" ];

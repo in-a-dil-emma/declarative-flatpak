@@ -1,8 +1,7 @@
-{ writeShellScriptBin, inputs }:
+{ writeShellScriptBin }:
 
 writeShellScriptBin "run-shell" ''
   pushd vm &>/dev/null
-  nix flake update flatpak
-  nixos-shell --quiet --flake .#shell -I nixpkgs=${inputs.nixpkgs}
+  nix run ../#nixosConfigurations.shell.config.system.build.vm
   popd &>/dev/null
 ''

@@ -11,7 +11,7 @@ mkShell {
     nil
     jq
 
-    (callPackage ./scripts/run-shell.nix { inherit inputs; })
+    (callPackage ./scripts/run-shell.nix { })
     (callPackage ./scripts/run-tests.nix { })
   ];
   shellHook = ''
