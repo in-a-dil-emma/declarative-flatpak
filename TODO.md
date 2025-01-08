@@ -11,3 +11,5 @@
 1. opt-out telemetry for "dev" branch
 1. Move flatpak refs into the Nix store
 1. How to make repo reuse faster?
+    1. just mv the repo? lol
+    1. try reflinks?

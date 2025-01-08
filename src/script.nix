@@ -80,7 +80,7 @@ writeShellScript "setup-flatpaks" ''
   # "steal" the repo from last install
   if [ -d "$FLATPAK_DIR/repo" ]; then
     echo "recycling existing repo..."
-    cp -al "$FLATPAK_DIR/repo" "$TARGET_DIR/repo"
+    cp -al --reflink=auto "$FLATPAK_DIR/repo" "$TARGET_DIR/repo"
     ostree remote list --repo="$TARGET_DIR/repo" | while read r; do
       ostree remote delete --repo="$TARGET_DIR/repo" --if-exists "$r"
     done
@@ -100,6 +100,10 @@ writeShellScript "setup-flatpaks" ''
 
   ${cfg.preInstallCommand}
 
+  rm -rf $DATA_DIR/install-data
+  mkdir -p $DATA_DIR/install-data
+  counter=0
+
   for i in ${builtins.toString (builtins.filter (x: builtins.match ".+${ffile}$" x == null) cfg.packages)}; do
     _remote=$(grep -Eo '^${fremote}' <<< $i)
     _id=$(grep -Eo '${ftype}/${fref}/${farch}/${fbranch}(:${fcommit})?' <<< $i)
@@ -109,18 +113,49 @@ writeShellScript "setup-flatpaks" ''
       _id=$(head -c-$(($(wc -c <<< $_commit) + 1)) <<< $_id)
     fi
 
-    # echo R $_remote
-    # echo C $_commit
-    # echo I $_id
+    mkdir -p $DATA_DIR/install-data/$_remote
+    echo -n "$_id:" >>$DATA_DIR/install-data/$_remote/$counter
+    [ -n "$_commit" ] && echo -n "$_commit" >>$DATA_DIR/install-data/$_remote/$counter
 
-    flatpak ${builtins.toString fargs} install --noninteractive --no-auto-pin $_remote $_id
-
-    if [ -n "$_commit" ]; then
-      if ! flatpak update --commit="$_commit" $_id; then
-        echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
-      fi
-    fi
+    counter=$[ counter + 1 ]
   done
+
+  unset counter
+
+  pushd $DATA_DIR/install-data
+  for rem in *; do
+    ref_list=""
+    pushd $DATA_DIR/install-data/$rem
+    for ref in *; do
+      set +e
+      IFS=: read _id _commit < $ref
+      set -e
+      
+      ref_list="$ref_list $_id"
+    done
+    popd
+
+    flatpak ${builtins.toString fargs} install --noninteractive --no-auto-pin $rem $ref_list
+
+    unset ref_list
+
+    pushd $DATA_DIR/install-data/$rem
+    for ref in *; do
+      set +e
+      read _id _commit < $ref
+      set -e
+      
+      if [ -n "$_commit" ]; then
+        if ! flatpak update --commit="$_commit" $_id; then
+          echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
+        fi
+      fi
+    done
+    popd
+  done
+  popd
+
+  unset counter
 
   echo "installing out-of-tree refs"
   for i in ${builtins.toString (builtins.filter (x: builtins.match ":.+\.flatpak$" x != null) cfg.packages)}; do
