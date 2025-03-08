@@ -1,7 +1,7 @@
 | OPTION                         | DEFAULT   | TYPE               |
 |--------------------------------|-----------|--------------------|
 | enableModule                   | see below | `bool`             |
-| flatpak-dir                    | see below | `path` or `null`   |
+| flatpakDir                     | see below | `path` or `null`   |
 | packages                       | `[]`      | see below          |
 | remotes                        | `{}`      | see below          |
 | overrides                      | `{}`      | see below          |
@@ -27,7 +27,7 @@ If your NixOS config has `services.flatpak.enable` set to `true`, this module wi
 > [!IMPORTANT]
 > The home-manager module will try to read the value of `services.flatpak.enable` from the **NixOS host**, it will never provide it's own `services.flatpak.enable` option, you will have to set `services.flatpak.enableModule` in your user config if you use home-manager as standalone.
 
-## services.flatpak.**flatpak-dir**
+## services.flatpak.**flatpakDir**
 ### Default
 ```nix
 null
