@@ -1,2 +1,4 @@
-/result
-/.direnv/
+result
+result-*
+.direnv/
+nixos.qcow2

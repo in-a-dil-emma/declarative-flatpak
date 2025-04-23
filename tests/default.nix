@@ -1,93 +1,57 @@
-{ nixosTest, modules }:
-
-nixosTest {
+let
+  inputs = import ../npins;
+  pkgs = import inputs.nixpkgs {};
+  inherit (pkgs.testers) runNixOSTest;
+in runNixOSTest {
   name = "NixOS test";
+
+  defaults = {
+    imports = [
+      ../src/modules/nixos.nix
+    ];
+
+    xdg.portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal
+      ];
+      config.common.default = "*";
+    };
+  };
 
   nodes = {
     bare = { config, pkgs, ... }: {
-      imports = [
-        modules.flatpak
-      ];
-
       services.flatpak.enable = true;
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-kde
-        ];
-        config.common.default = "*";
-      };
     };
     disabled = { config, pkgs, ... }: {
-      imports = [
-        modules.flatpak
-      ];
-
       services.flatpak = {
         enable = true;
         enableModule = false;
         waitForInternet = false;
       };
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-kde
-        ];
-        config.common.default = "*";
-      };
     };
     custom_dirs = { config, pkgs, ... }: {
-      imports = [
-        modules.flatpak
-      ];
-      
       services.flatpak = {
         enable = true;
         flatpakDir = "/target";
         waitForInternet = false;
       };
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-kde
-        ];
-        config.common.default = "*";
-      };
     };
     installation = { config, lib, pkgs, ... }: {
-      imports = [
-        modules.flatpak
-      ];
-
       services.flatpak = {
         enable = true;
         flatpakDir = "/target";
         remotes = {
-          "test" = ../vm/gol.launcher.moe.flatpakrepo;
+          "test" = ../vm/files/gol.launcher.moe.flatpakrepo;
         };
         packages = [
-          ":${../vm/xwaylandvideobridge.flatpak}"
+          ":${../vm/files/xwaylandvideobridge.flatpak}"
         ];
         debug = true;
         waitForInternet = false;
       };
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-kde
-        ];
-        config.common.default = "*";
-      };
     };
     persist = { config, pkgs, ... }: {
-      imports = [
-        modules.flatpak
-      ];
-
       services.flatpak = {
         enable = true;
         flatpakDir = "/target";
@@ -96,38 +60,33 @@ nixosTest {
           touch /target/thisfileshouldnotpersist
         '';
         packages = [
-          ":${../vm/xwaylandvideobridge.flatpak}"
+          ":${../vm/files/xwaylandvideobridge.flatpak}"
         ];
         debug = true;
         waitForInternet = false;
-      };
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-kde
-        ];
-        config.common.default = "*";
       };
     };
   };
 
   testScript = ''
-    disabled.wait_for_unit("network-online.target")
+    start_all()
+
+    disabled.wait_for_unit("multi-user.target")
     disabled.succeed("which flatpak")
     disabled.fail("systemctl status --no-pager manage-system-flatpaks.service")
     disabled.shutdown()
   
-    bare.wait_for_unit("network-online.target")
+    bare.wait_for_unit("multi-user.target")
     bare.succeed("which flatpak")
     bare.succeed("systemctl list-unit-files -l | grep 'manage-system-flatpaks'")
     bare.shutdown()
 
+    custom_dirs.wait_for_unit("multi-user.target")
     custom_dirs.wait_for_unit("manage-system-flatpaks.service")
     custom_dirs.wait_until_succeeds("stat /target", timeout=60)
     custom_dirs.shutdown()
 
-    installation.wait_for_unit("network-online.target")
+    installation.wait_for_unit("multi-user.target")
     installation.wait_for_unit("manage-system-flatpaks.service")
     installation.wait_until_succeeds("stat /target/.module", timeout=120)
     installation.wait_until_succeeds("stat /target/repo", timeout=120)
@@ -137,12 +96,16 @@ nixosTest {
     installation.fail("flatpak run --command=false org.kde.xwaylandvideobridge")
   
     persist.start(allow_reboot=True)
+    persist.wait_for_unit("multi-user.target")
     persist.wait_for_unit("manage-system-flatpaks.service")
     persist.wait_for_file("/target/repo", timeout=120)
     # Added by POST hook, both should succeed
     persist.succeed("stat /target/repo/thisfileshouldpersist")
     persist.succeed("stat /target/thisfileshouldnotpersist")
     persist.reboot()
+    # errors begin here...
+    persist.wait_for_unit("multi-user.target")
+    persist.wait_for_unit("manage-system-flatpaks.service")
     persist.wait_until_succeeds("stat /target/.module/new", timeout=60)
     persist.wait_until_fails("stat /target/.module/new", timeout=60)
     persist.succeed("stat /target/repo/thisfileshouldpersist")
