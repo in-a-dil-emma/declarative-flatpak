@@ -123,36 +123,40 @@ writeShellScript "setup-flatpaks" ''
   unset counter
 
   pushd $DATA_DIR/install-data
-  for rem in *; do
-    ref_list=""
-    pushd $DATA_DIR/install-data/$rem
-    for ref in *; do
-      set +e
-      IFS=: read _id _commit < $ref
-      set -e
-      
-      ref_list="$ref_list $_id"
-    done
-    popd
+  if [ $(find . -mindepth 1 | wc -l) -gt 0 ]; then
+    for rem in *; do
+      ref_list=""
+      pushd $DATA_DIR/install-data/$rem
+      for ref in *; do
+        set +e
+        IFS=: read _id _commit < $ref
+        set -e
+        
+        ref_list="$ref_list $_id"
+      done
+      popd
 
-    flatpak ${builtins.toString fargs} install --noninteractive --no-auto-pin $rem $ref_list
+      flatpak ${builtins.toString fargs} install --noninteractive --no-auto-pin $rem $ref_list
 
-    unset ref_list
+      unset ref_list
 
-    pushd $DATA_DIR/install-data/$rem
-    for ref in *; do
-      set +e
-      read _id _commit < $ref
-      set -e
-      
-      if [ -n "$_commit" ]; then
-        if ! flatpak update --commit="$_commit" $_id; then
-          echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
+      pushd $DATA_DIR/install-data/$rem
+      for ref in *; do
+        set +e
+        read _id _commit < $ref
+        set -e
+        
+        if [ -n "$_commit" ]; then
+          if ! flatpak update --commit="$_commit" $_id; then
+            echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
+          fi
         fi
-      fi
+      done
+      popd
     done
-    popd
-  done
+  echo
+    echo "nothing to install from repos"
+  fi
   popd
 
   unset counter
