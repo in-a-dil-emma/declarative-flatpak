@@ -4,7 +4,7 @@
     useUserPackages = true;
     users."user" = { config, lib, ... }: {
       imports = [
-        ../src/modules/home-manager.nix
+        ../home-manager
       ];
 
       services.flatpak = {

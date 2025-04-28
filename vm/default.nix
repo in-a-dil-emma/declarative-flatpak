@@ -8,7 +8,7 @@ let
   vm = nixos [
     ({ modulesPath, ... }: { imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ]; })
     (inputs.home-manager + "/nixos")
-    ../src/modules/nixos.nix
+    ../nixos
     ./configuration.nix
     ./home-manager.nix
   ];

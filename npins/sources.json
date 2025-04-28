@@ -9,15 +9,15 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "81541ea36d1fead4be7797e826ee325d4c19308b",
-      "url": "https://github.com/nix-community/home-manager/archive/81541ea36d1fead4be7797e826ee325d4c19308b.tar.gz",
-      "hash": "02zwkqjz4q8148ycv0qj1bz1bpg0zjy02v4c56jln5kg1lmmphgs"
+      "revision": "69c60b035e6bb51a4c5607f184bf64312c294139",
+      "url": "https://github.com/nix-community/home-manager/archive/69c60b035e6bb51a4c5607f184bf64312c294139.tar.gz",
+      "hash": "0in3rbzrhr56yij8qgghiv2n00kidsgpxw46is9dcb0a31qv0i43"
     },
     "nixpkgs": {
       "type": "Channel",
       "name": "nixpkgs-unstable",
-      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-25.05pre785333.ebe4301cbd8f/nixexprs.tar.xz",
-      "hash": "16z7hjabd181i08hgg82y7777v5iv87g3y4md6zvx4i4c49ph4hw"
+      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-25.05pre788066.507b63021ada/nixexprs.tar.xz",
+      "hash": "1mx9ls3i1j4ydvi2pili1b68akr3i2zgdkddpsxnr2ql5l4ys9hl"
     }
   },
   "version": 5

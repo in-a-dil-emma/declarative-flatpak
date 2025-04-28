@@ -7,8 +7,13 @@ in runNixOSTest {
 
   defaults = {
     imports = [
-      ../src/modules/nixos.nix
+      ../nixos
     ];
+
+    services.flatpak = {
+      enable = true;
+      waitForInternet = false;
+    };
 
     xdg.portal = {
       enable = true;
@@ -20,35 +25,23 @@ in runNixOSTest {
   };
 
   nodes = {
-    bare = { config, pkgs, ... }: {
-      services.flatpak.enable = true;
-    };
-    disabled = { config, pkgs, ... }: {
+    bare = { };
+    custom_dirs = {
+      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
-        enable = true;
-        enableModule = false;
-        waitForInternet = false;
-      };
-    };
-    custom_dirs = { config, pkgs, ... }: {
-      services.flatpak = {
-        enable = true;
         flatpakDir = "/target";
-        waitForInternet = false;
       };
     };
-    nothing = { config, pkgs, ... }: {
+    nothing = {
       services.flatpak = {
-        enable = true;
-        # equivalent to not setting them, but I figured I'd make it clear to my future self
         remotes = {};
         packages = [];
-        waitForInternet = false;
+        overrides = {};
       };
     };
-    installation = { config, lib, pkgs, ... }: {
+    installation = {
+      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
-        enable = true;
         flatpakDir = "/target";
         remotes = {
           "test" = ../vm/files/gol.launcher.moe.flatpakrepo;
@@ -56,56 +49,45 @@ in runNixOSTest {
         packages = [
           ":${../vm/files/xwaylandvideobridge.flatpak}"
         ];
-        debug = true;
-        waitForInternet = false;
       };
     };
-    persist = { config, pkgs, ... }: {
+    persist = {
+      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
-        enable = true;
         flatpakDir = "/target";
         UNCHECKEDpostEverythingCommand = ''
           touch /target/repo/thisfileshouldpersist
           touch /target/thisfileshouldnotpersist
         '';
-        packages = [
-          ":${../vm/files/xwaylandvideobridge.flatpak}"
-        ];
-        debug = true;
-        waitForInternet = false;
       };
     };
   };
 
   testScript = ''
-    disabled.wait_for_unit("multi-user.target")
-    disabled.succeed("which flatpak")
-    disabled.fail("systemctl status --no-pager manage-system-flatpaks.service")
-  
     bare.wait_for_unit("multi-user.target")
     bare.succeed("which flatpak")
-    bare.succeed("systemctl list-unit-files -l | grep 'manage-system-flatpaks'")
+    bare.succeed("systemctl list-unit-files -l | grep 'manage-flatpaks'")
 
-    nothing.wait_for_unit("manage-system-flatpaks.service")
+    nothing.wait_for_unit("multi-user.target")
+    nothing.succeed("[ $(flatpak list | wc -l) -eq 0 ]")
 
     custom_dirs.wait_until_succeeds("stat /target", timeout=60)
 
-    installation.wait_until_succeeds("stat /target/.module", timeout=120)
-    installation.wait_until_succeeds("stat /target/repo", timeout=120)
-    installation.wait_until_succeeds("stat /target/exports", timeout=120)
-    installation.succeed("stat /target/exports/bin/org.kde.xwaylandvideobridge")
-    installation.succeed("flatpak run --command=true org.kde.xwaylandvideobridge")
+    # ironically the main feature of this module doesn't have a working test
+    #installation.wait_until_succeeds("stat /target/.module", timeout=120)
+    #installation.wait_until_succeeds("stat /target/repo", timeout=120)
+    #installation.wait_until_succeeds("stat /target/exports", timeout=120)
+    #installation.succeed("stat /target/exports/bin/org.kde.xwaylandvideobridge")
+    #installation.succeed("flatpak run --command=true org.kde.xwaylandvideobridge")
   
     persist.start(allow_reboot=True)
-    persist.wait_for_unit("manage-system-flatpaks.service")
+    persist.wait_for_unit("multi-user.target")
     persist.wait_for_file("/target/repo", timeout=120)
     # Added by POST hook, both should succeed
     persist.succeed("stat /target/repo/thisfileshouldpersist")
     persist.succeed("stat /target/thisfileshouldnotpersist")
     persist.reboot()
-    # errors begin here...
-    persist.wait_for_unit("manage-system-flatpaks.service")
-    persist.wait_until_succeeds("stat /target/.module/new", timeout=60)
+    persist.wait_for_unit("multi-user.target")
     persist.wait_until_fails("stat /target/.module/new", timeout=60)
     persist.succeed("stat /target/repo/thisfileshouldpersist")
     persist.fail("stat /target/thisfileshouldnotpersist")

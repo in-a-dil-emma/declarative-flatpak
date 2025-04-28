@@ -1,23 +1,17 @@
-{ cfg }:
-
-{ lib, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 let
-  flatpak-types = callPackage ./lib/types/flatpak.nix {};
-  ini-types = callPackage ./lib/types/ini.nix {};
-  
   inherit (pkgs) callPackage;
   inherit (lib) mkOption mdDoc mkEnableOption;
   inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
   
   inherit (ini-types) ini;
   inherit (flatpak-types) package remote;
+
+  flatpak-types = callPackage ../lib/types/flatpak.nix {};
+  ini-types = callPackage ../lib/types/ini.nix {};
+  cfg = config.services.flatpak;
 in {
-  imports = [
-    ./renames.nix
-    ./removes.nix
-  ];
-  
   options.services.flatpak = {
     packages = mkOption {
       type = listOf package;
@@ -28,13 +22,6 @@ in {
 
         As soon as you use more than one remote you should start prefixing them to avoid conflicts.
         The package must be prefixed with the remote's name and a colon.
-      '';
-    };
-    enableModule = mkOption {
-      type = bool;
-      default = cfg.enable;
-      description = mdDoc ''
-        Enable/disable this module.
       '';
     };
     flatpakDir = mkOption {
@@ -164,6 +151,17 @@ in {
         Paths may not be escaped.
       '';
     };
+    #failureNotification = {
+    #  enable = mkOption {
+
+    #  };
+    #  targetGroup = mkOption {
+
+    #  };
+    #  messageTemplate = mkOption {
+
+    #  };
+    #};
     waitForInternet = mkOption {
       default = true;
       type = bool;
