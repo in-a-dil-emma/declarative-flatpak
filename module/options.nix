@@ -1,23 +1,22 @@
-{ config, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 
 let
-  inherit (pkgs) callPackage;
-  inherit (lib) mkOption mdDoc mkEnableOption;
-  inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
-
-  inherit (ini-types) ini;
-  inherit (flatpak-types) package remote;
-
   flatpak-types = callPackage ../lib/types/flatpak.nix {};
   ini-types = callPackage ../lib/types/ini.nix {};
-  cfg = config.services.flatpak;
+
+  inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
+  inherit (pkgs) callPackage;
+  inherit (lib) mkOption;
+
+  inherit (flatpak-types) package remote;
+  inherit (ini-types) ini;
 in {
   options.services.flatpak = {
     packages = mkOption {
       type = listOf package;
       default = [];
       example = [ "flathub:app/org.kde.index//stable" "flathub-beta:app/org.kde.kdenlive/x86_64/stable" ];
-      description = mdDoc ''
+      description = ''
         Which packages to install.
 
         As soon as you use more than one remote you should start prefixing them to avoid conflicts.
@@ -27,7 +26,7 @@ in {
     flatpakDir = mkOption {
       type = nullOr path;
       default = null;
-      description = mdDoc ''
+      description = ''
         Path where to link the flatpak file to.
 
         By default will be:
@@ -40,7 +39,7 @@ in {
     preRemotesCommand = mkOption {
       type = nullOr str;
       default = "";
-      description = mdDoc ''
+      description = ''
         Which commands to run before remoted are configured.
 
         All essential variables have been initialized by now.
@@ -49,21 +48,21 @@ in {
     preInstallCommand = mkOption {
       type = nullOr str;
       default = "";
-      description = mdDoc ''
+      description = ''
         Which commands to run before refs are installed.
       '';
     };
     preSwitchCommand = mkOption {
       type = nullOr str;
       default = "";
-      description = mdDoc ''
+      description = ''
         Which commands to run before the generation is activated.
       '';
     };
     UNCHECKEDpostEverythingCommand = mkOption {
       type = nullOr str;
       default = "";
-      description = mdDoc ''
+      description = ''
         Which commands to run after the script completed execution.
 
         The error status of this command will NOT be checked. Errors that occur will NOT prevent the generation from being activated!
@@ -78,7 +77,7 @@ in {
           "flathub-beta" = "/path/flathub-beta.flatpakrepo";
         };
       '';
-      description = mdDoc ''
+      description = ''
         Declare flatpak remotes.
       '';
     };
@@ -138,28 +137,28 @@ in {
           };
         }
       '';
-      description = mdDoc ''
+      description = ''
         Overrides to apply.
 
         Paths prefixed with '!' will deny read permissions for that path, also applies to sockets.
         Paths may not be escaped.
       '';
     };
-    #failureNotification = {
-    #  enable = mkOption {
-
-    #  };
-    #  targetGroup = mkOption {
-
-    #  };
-    #  messageTemplate = mkOption {
-
-    #  };
-    #};
+    # failureNotification = {
+    #   enable = mkOption {
+    #
+    #   };
+    #   targetGroup = mkOption {
+    #
+    #   };
+    #   messageTemplate = mkOption {
+    #
+    #   };
+    # };
     # blockStartup = mkOption {
     #   type = bool;
     #   default = false;
-    #   description = mdDoc ''
+    #   description = ''
     #   '';
     # };
     forceRunOnActivation = mkOption {
