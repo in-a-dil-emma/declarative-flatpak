@@ -4,8 +4,7 @@ in
 
 {
   imports = [
-    (mkRemovedOptionModule [ "services" "flatpak" "preDedupeCommand" ] "Since deduplication has been removed, this hook had to go.")
-    (mkRemovedOptionModule [ "services" "flatpak" "deduplicate" ] "This option has been made redundant due to internal script changes.")
-    (mkRemovedOptionModule [ "services" "flatpak" "state-dir" ] "This module does not rely on a state dir anymore.")
+    (mkRemovedOptionModule [ "services" "flatpak" "waitForInternet" ] "This option was addded for VM tests and is no longer required, plus waiting for nss-lookup.target is just as reliable.")
+    (mkRemovedOptionModule [ "services" "flatpak" "debug" ] "This option became redundant.")
   ];
 }

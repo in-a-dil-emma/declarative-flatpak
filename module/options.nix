@@ -37,12 +37,6 @@ in {
         If left at default value, the corresponding directory will be picked.
       '';
     };
-    # blockStartup = mkOption {
-    #   type = bool;
-    #   default = false;
-    #   description = mdDoc ''
-    #   '';
-    # };
     preRemotesCommand = mkOption {
       type = nullOr str;
       default = "";
@@ -162,24 +156,19 @@ in {
 
     #  };
     #};
-    waitForInternet = mkOption {
-      default = true;
+    # blockStartup = mkOption {
+    #   type = bool;
+    #   default = false;
+    #   description = mdDoc ''
+    #   '';
+    # };
+    forceRunOnActivation = mkOption {
       type = bool;
-    };
-    runOnActivation = mkOption {
-      type = bool;
-      default = true;
+      default = false;
     };
     onCalendar = mkOption {
-      type = nullOr str;
-      default = null;
+      type = str;
+      default = "weekly";
     };
-    debug = mkEnableOption "Show more info.";
-  };
-
-  config = {
-    assertions = [
-      { assertion = cfg.runOnActivation || cfg.onCalendar != null; message = "Either onCalendar needs to be set or runOnActivation needs to be enabled"; }
-    ];
   };
 }
