@@ -3,7 +3,7 @@
     graphics = false;
     cores = 4;
     memorySize = 1024 * 4;
-    diskSize = 1024 * 16;
+    diskSize = 1024 * 64;
     qemu = {
       consoles = [ "tty0" "hvc0" ];
       options = [
@@ -55,10 +55,6 @@
         # Intentionally leave out everything for bugfix
       };
     };
-    # flatpakDir = "/flatpak";
-    # debug = true;
-    runOnActivation = true;
-    onCalendar = "weekly";
   };
 
   # Dev env stuff
