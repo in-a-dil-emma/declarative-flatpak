@@ -4,7 +4,7 @@ let
   inherit (pkgs) callPackage;
   inherit (lib) mkOption mdDoc mkEnableOption;
   inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
-  
+
   inherit (ini-types) ini;
   inherit (flatpak-types) package remote;
 
@@ -29,7 +29,7 @@ in {
       default = null;
       description = mdDoc ''
         Path where to link the flatpak file to.
-        
+
         By default will be:
         - /var/lib/flatpak (for NixOS)
         - ~/.local/share/flatpak (for home-manager)
