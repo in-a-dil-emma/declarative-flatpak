@@ -34,21 +34,24 @@ let
 
       CURRENT_FLATPAK_DIR="${cfg.internal.targetDir}"
       ${optionalString (cfg.flatpakDir != null) ''
-      CURRENT_FLATPAK_DIR="${cfg.flatpakDir}"
+        CURRENT_FLATPAK_DIR="${cfg.flatpakDir}"
       ''}
 
-      DATA_DIR="$CURRENT_FLATPAK_DIR/$MODULE_DIR_INFIX"
+      DATA_DIR="$CURRENT_FLATPAK_DIR"/"$MODULE_DIR_INFIX"
 
-      NEW_FLATPAK_INSTALL="$DATA_DIR/new"
+      NEW_FLATPAK_INSTALL="$DATA_DIR"/new
+
+      TRASH_DIR="$DATA_DIR"/trash/"$CURR_BOOTID"/"$(uuidgen)"
 
       export FLATPAK_USER_DIR="$NEW_FLATPAK_INSTALL"
       export FLATPAK_SYSTEM_DIR="$NEW_FLATPAK_INSTALL"
 
-      TRASH_DIR="$DATA_DIR/trash/$CURR_BOOTID/$(uuidgen)"
-
       trap 'touch "$DATA_DIR"/repo-dirty' ERR
     '';
     dirs = ''
+      systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
+
+      rm -f "$DATA_DIR"/config
       rm -rf "$DATA_DIR"/repo-save
       rm -rf "$DATA_DIR"/install-data
 
@@ -60,14 +63,7 @@ let
 
       rm -rf "$NEW_FLATPAK_INSTALL"
 
-      systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
-      mkdir -pm 755 "$DATA_DIR"
-      mkdir -pm 755 "$NEW_FLATPAK_INSTALL"
-      mkdir -pm 755 "$CURRENT_FLATPAK_DIR"
-      mkdir -pm 755 "$TRASH_DIR"
-
-      mkdir -p "$DATA_DIR"/install-data
-      mkdir -p "$NEW_FLATPAK_INSTALL"/overrides
+      mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides
     '';
     recycle-repo = ''
       if [ -e "$DATA_DIR"/repo-dirty ]; then
@@ -81,16 +77,16 @@ let
           echo "Recycling existing repo"
           cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
         else
-          ostree init --repo="$NEW_FLATPAK_INSTALL/repo" --mode=bare-user-only
+          ostree init --repo="$NEW_FLATPAK_INSTALL"/repo --mode=bare-user-only
         fi
         rm -rf \
-          "$NEW_FLATPAK_INSTALL"/repo/refs \
-          "$NEW_FLATPAK_INSTALL"/repo/extensions
+          "$NEW_FLATPAK_INSTALL"/repo/refs/* \
+          "$NEW_FLATPAK_INSTALL"/repo/extensions/*
         mkdir -p \
           "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
           "$NEW_FLATPAK_INSTALL"/repo/extensions
-        ostree remote list --repo="$NEW_FLATPAK_INSTALL/repo" | while read r; do
-          ostree remote delete --repo="$NEW_FLATPAK_INSTALL/repo" --if-exists "$r"
+        ostree remote list --repo="$NEW_FLATPAK_INSTALL"/repo | while read r; do
+          ostree remote delete --repo="$NEW_FLATPAK_INSTALL"/repo --if-exists "$r"
         done
         rm -f "$DATA_DIR"/repo-dirty
       fi
@@ -128,10 +124,8 @@ let
         ref_list=()
         for ref in *; do
           _id="$(<"$ref"/id)"
-
           ref_list+=("$_id")
         done
-        echo "|$rem|''${ref_list[*]}|"
 
         for (( i = 0; i < ''${#ref_list[@]}; i += 10 )); do
           flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$rem" "''${ref_list[@]:i:10}" || exit 1
@@ -175,7 +169,6 @@ let
     '';
     overrides = ''
       echo "Installing overrides"
-
       ${concatStringsSep "\n" (map (ref: ''
         cat ${cfg.overrides.${ref}.source} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
       '') (attrNames cfg.overrides))}
@@ -196,22 +189,27 @@ let
         mv "$NEW_FLATPAK_INSTALL"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
       fi
     '';
-      echo "Installing flatpak data"
     switch = ''
       echo "Moving old data for future deletion"
-      mv "$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db) "$TRASH_DIR"
+      {
+        dirs=("$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db))
+        if (( ''${#dirs[@]} > 0 )); then
+          mv "''${dirs[@]}" "$TRASH_DIR"
+        fi
+      }
 
+      echo "Installing flatpak data"
       touch "$DATA_DIR"/repo-dirty
       pushd "$NEW_FLATPAK_INSTALL"
       for i in *; do
-        rsync -a --remove-source-files --delete "$i"/ "$CURRENT_FLATPAK_DIR"/"$i"/ &
+        mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
       done
       popd
-      wait
       rm -f "$DATA_DIR"/repo-dirty
+
+      echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
       rm -rf "$NEW_FLATPAK_INSTALL"
-      unset FLATPAK_USER_DIR FLATPAK_SYSTEM_DIR
     '';
   };
 in {
