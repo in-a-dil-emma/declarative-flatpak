@@ -3,7 +3,7 @@
 let
   inherit (pkgs) curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
   inherit (builtins) concatStringsSep map filter toJSON match attrValues mapAttrs attrNames;
-  inherit (lib) makeBinPath mkOption optionalString;
+  inherit (lib) makeBinPath optionalString;
 
   inherit (import ../lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
 
@@ -235,20 +235,11 @@ let
     '';
   };
 in {
-  options.services.flatpak.mainScript = {
-    activation = mkOption {
-      internal = true;
-    };
-    auto = mkOption {
-      internal = true;
-    };
-  };
-
-  config.services.flatpak.mainScript = {
+  config.services.flatpak.internal.mainScript = {
     activation = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
       script.vars
       script.config-diff
-      config.services.flatpak.mainScript.auto
+      config.services.flatpak.internal.mainScript.auto
     ]);
     auto = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
       script.setup

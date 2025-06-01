@@ -46,7 +46,7 @@ in
         Description = "Manage flatpaks";
         Before = Conflicts;
       };
-      serviceConfig.ExecStart = config.services.flatpak.mainScript.activation;
+      serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
     } [ applyUnitOrdering applyServiceRestart (mkIf cfg.enable) ];
     services."manage-flatpaks-auto" = pipe {
       unitConfig = rec {
@@ -54,7 +54,7 @@ in
         Description = "Manage flatpaks";
         After = Conflicts;
       };
-      serviceConfig.ExecStart = config.services.flatpak.mainScript.auto;
+      serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
     } [ applyServiceRestart (mkIf cfg.enable) ];
     timers."manage-flatpaks-auto" = pipe {
       timerConfig = {
