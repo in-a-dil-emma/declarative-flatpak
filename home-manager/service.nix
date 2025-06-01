@@ -8,14 +8,21 @@ let
       "default.target"
     ];
   } prev;
-  applyServiceRestart = prev: recursiveUpdate {
+  applySharedServiceConfig = prev: recursiveUpdate {
     Unit = {
+      ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
+      RequiresMountsFor = [ cfg.internal.targetDir ];
       StartLimitIntervalSec = 60;
-      RefuseManualStart = true;
       StartLimitBurst = 3;
     };
     Service = {
+      #TemporaryFileSystem = [ config.home.homeDirectory config.xdg.cacheHome ];
+      #ReadWritePaths = [ "/run/user" cfg.internal.targetDir ];
+      #ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
       Restart = "on-failure";
+      #ReadOnlyPaths = "/";
+      #PrivateTmp = true;
+      #NoExecPaths = "/";
     };
   } prev;
 in 
@@ -28,16 +35,16 @@ in
         Description = "Manage flatpaks";
         Before = Conflicts;
       };
-      Service.ExecStart = config.services.flatpak.mainScript.activation;
-    } [ applyUnitOrdering applyServiceRestart (mkIf cfg.enable) ];
+      Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
+    } [ applyUnitOrdering applySharedServiceConfig (mkIf cfg.enable) ];
     services."manage-flatpaks-auto" = pipe {
       Unit = rec {
         Conflicts = "manage-flatpaks-activation.service";
         Description = "Manage flatpaks";
         After = Conflicts;
       };
-      Service.ExecStart = config.services.flatpak.mainScript.auto;
-    } [ applyServiceRestart (mkIf cfg.enable) ];
+      Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
+    } [ applySharedServiceConfig (mkIf cfg.enable) ];
     timers."manage-flatpaks-auto" = pipe {
       Timer = {
         OnCalendar = cfg.onCalendar;

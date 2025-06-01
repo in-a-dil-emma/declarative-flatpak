@@ -15,27 +15,24 @@ let
       "multi-user.target"
     ];
   } prev;
-  applyServiceRestart = prev: recursiveUpdate {
+  applySharedServiceConfig = prev: recursiveUpdate {
     unitConfig = {
+      ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
+      RequiresMountsFor = [ cfg.internal.targetDir ];
       StartLimitIntervalSec = 60;
-      RefuseManualStart = true;
       StartLimitBurst = 3;
     };
     serviceConfig = {
+      #ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
+      #ReadWritePaths = [ cfg.internal.targetDir ];
+      #TemporaryFileSystem = [ "/root" ];
       Restart = "on-failure";
+      #ProtectHome = "tmpfs";
+      #ReadOnlyPaths = "/";
+      #PrivateTmp = true;
+      #NoExecPaths = "/";
     };
   } prev;
-  # unsure if this causes issues
-  # applyServiceSandboxing = prev: recursiveUpdate {
-  #   serviceConfig = {
-  #     RequiresMountsFor = [ cfg.flatpakDir ];
-  #     ReadWritePaths = [ cfg.flatpakDir ];
-  #     ProtectSystem = "strict";
-  #     PrivateDevices = true;
-  #     ProtectHome = true;
-  #     PrivateTmp = true;
-  #   };
-  # } prev;
 in
 
 {
@@ -47,7 +44,7 @@ in
         Before = Conflicts;
       };
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
-    } [ applyUnitOrdering applyServiceRestart (mkIf cfg.enable) ];
+    } [ applyUnitOrdering applySharedServiceConfig (mkIf cfg.enable) ];
     services."manage-flatpaks-auto" = pipe {
       unitConfig = rec {
         Conflicts = "manage-flatpaks-activation.service";
@@ -55,7 +52,7 @@ in
         After = Conflicts;
       };
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
-    } [ applyServiceRestart (mkIf cfg.enable) ];
+    } [ applySharedServiceConfig (mkIf cfg.enable) ];
     timers."manage-flatpaks-auto" = pipe {
       timerConfig = {
         OnCalendar = cfg.onCalendar;
