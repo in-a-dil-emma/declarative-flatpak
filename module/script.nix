@@ -65,10 +65,7 @@ let
 
       rm -rf "$NEW_FLATPAK_INSTALL"
 
-      [ -d "$DATA_DIR/trash" ] && \
-        find "$DATA_DIR/trash" -mindepth 1 -maxdepth 1 -not -name "$CURR_BOOTID" | while read r; do
-          systemd-run ${system-user-switch} rm -rf "$r"
-        done
+      systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
     '';
     dirs = ''
       mkdir -pm 755 "$DATA_DIR"
@@ -184,12 +181,8 @@ let
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo
     '';
     trash-old = ''
-      echo "moving old data to trash"
-
-      # Move the current installation into the bin
-      find "$CURRENT_FLATPAK_DIR" -mindepth 1 -maxdepth 1 -not \( -name "$MODULE_DIR_INFIX" -o -name 'db' \) | while read r; do
-        mv "$r" "$TRASH_DIR"/"''${r##*/}"
-      done
+      echo "moving old data for future deletion"
+      mv "$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db) "$TRASH_DIR"
     '';
     overrides = ''
       echo "installing overrides"
@@ -201,7 +194,7 @@ let
     exports = optionalString (cfg.flatpakDir != null) ''
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
         # Dereference because exports are symlinks by default
-        rsync -aL "$NEW_FLATPAK_INSTALL"/exports/ "$NEW_FLATPAK_INSTALL"/processed-exports/
+        rsync -aL --remove-source-files "$NEW_FLATPAK_INSTALL"/exports "$NEW_FLATPAK_INSTALL"/processed-exports
 
         # Then begin "processing" the exports to make them point to the correct locations
         [ -d "$NEW_FLATPAK_INSTALL"/processed-exports/bin ] && \
@@ -211,7 +204,7 @@ let
           find "$NEW_FLATPAK_INSTALL"/processed-exports/share/applications \
             -type f -exec sed -i "s,Exec=flatpak run,Exec=env FLATPAK_USER_DIR=\"$CURRENT_FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$CURRENT_FLATPAK_DIR\" flatpak run,gm" '{}' \;
 
-        rsync -a --remove-source-files --delete "$NEW_FLATPAK_INSTALL"/processed-exports/ "$NEW_FLATPAK_INSTALL"/exports/
+        mv "$NEW_FLATPAK_INSTALL"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
       fi
     '';
     install-gen = ''
