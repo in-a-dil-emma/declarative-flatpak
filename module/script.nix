@@ -16,7 +16,7 @@ let
   script = {
     config-diff = optionalString (!cfg.forceRunOnActivation) ''
       if [ -e "$DATA_DIR/config" ] && cmp -s ${filecfg} "$DATA_DIR/config"; then
-        echo "Configs do not differ, therefore I won't do anything. You may change this default behaviour."
+        echo "Configs do not differ, therefore I won't do anything. You may change this default behaviour"
         exit 0
       fi
     '';
@@ -55,7 +55,7 @@ let
 
       # we can try recycling the in-progress repo
       if [ -d "$NEW_FLATPAK_INSTALL"/repo ]; then
-        echo "in-progress state found, we can recycle it"
+        echo "Found in-progress state, we can recycle it"
         mv "$NEW_FLATPAK_INSTALL"/repo "$DATA_DIR"/repo-save
       fi
 
@@ -74,14 +74,14 @@ let
     '';
     recycle-repo = ''
       if [ -e "$DATA_DIR"/repo-dirty ]; then
-        echo "Service did not shut down clean. NOT recycling previous runs."
+        echo "Service did not shut down clean. NOT recycling previous runs"
         rm -f "$DATA_DIR"/repo-dirty
       else
         touch "$DATA_DIR"/repo-dirty
         if [ -d "$DATA_DIR"/repo-save ]; then
           mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
         elif [ -d "$CURRENT_FLATPAK_DIR"/repo ]; then
-          echo "recycling existing repo..."
+          echo "Recycling existing repo"
           cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
         else
           ostree init --repo="$NEW_FLATPAK_INSTALL/repo" --mode=bare-user-only
@@ -99,7 +99,7 @@ let
       fi
     '';
     add-remotes = toString (attrValues (mapAttrs (name: value: ''
-      echo "adding remote ${name} with URL ${value}"
+      echo "Adding remote ${name} with URL ${value}"
       flatpak ${system-user-switch} remote-add --if-not-exists "${name}" "${value}" || exit 1
     '') cfg.remotes));
     prep-install = ''
@@ -149,7 +149,7 @@ let
           _commit="$(<"$ref"/commit)"
 
           if ! flatpak update --commit="$_commit" "$_id"; then
-            echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
+            echo "Failed to update ref $_id to commit $_commit. Verified if the commit is correct"
           fi
         done
 
@@ -158,7 +158,7 @@ let
       popd
     '';
     install-local = ''
-      echo "installing out-of-tree refs"
+      echo "Installing out-of-tree refs"
       for i in ${toString (filter (x: match ":.+\.flatpak$" x != null) cfg.packages)}; do
         _id="$(grep -Eo ':.+\.flatpak$' <<< $i | tail -c+2)"
 
@@ -177,11 +177,11 @@ let
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo
     '';
     trash-old = ''
-      echo "moving old data for future deletion"
+      echo "Moving old data for future deletion"
       mv "$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db) "$TRASH_DIR"
     '';
     overrides = ''
-      echo "installing overrides"
+      echo "Installing overrides"
 
       ${concatStringsSep "\n" (map (ref: ''
         cat ${cfg.overrides.${ref}.source} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
@@ -204,7 +204,7 @@ let
       fi
     '';
     install-gen = ''
-      echo "installing flatpak data"
+      echo "Installing flatpak data"
 
       touch "$DATA_DIR"/repo-dirty
       pushd "$NEW_FLATPAK_INSTALL"
