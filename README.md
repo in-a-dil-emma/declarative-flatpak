@@ -116,22 +116,14 @@ You will get notified in time when a stable branch gets obsoleted.
 
 | OPTION                         | TYPE           | DEFAULT |
 |--------------------------------|----------------|---------|
-| enable                         | bool           | false   |
-| flatpakDir                     | path or null   | depends |
+| enable                         | boolean        | false   |
 | preRemotesCommand              | string or null | null    |
 | preInstallCommand              | string or null | null    |
 | preSwitchCommand               | string or null | null    |
 | UNCHECKEDpostEverythingCommand | string or null | null    |
-
-<details>
-<summary>Special case: services → flatpak → <b>flatpakDir</b></summary>
-
-| MODULE TYPE  | DEFAULT                    |
-|--------------|----------------------------|
-| NixOS        | /var/lib/flatpak           |
-| Home Manager | ${XDG\_DATA\_HOME}/flatpak |
-
-</details>
+| flatpakDir                     | path or null   | depends |
+| forceRunOnActivation           | boolean        | false   |
+| onCalendar                     | systemd time   | weekly  |
 
 </details>
 
@@ -186,6 +178,16 @@ VALUE:
 </details>
 
 <details>
+<summary>Special case: services → flatpak → <b>flatpakDir</b></summary>
+
+| MODULE TYPE  | DEFAULT                    |
+|--------------|----------------------------|
+| NixOS        | /var/lib/flatpak           |
+| Home Manager | ${XDG\_DATA\_HOME}/flatpak |
+
+</details>
+
+<details>
 <summary>Example configuration.</summary>
 
 ```nix
@@ -233,6 +235,3 @@ VALUE:
 
 > [!NOTE]
 > Your setup must be able to hold the size of your flatpak installation at least twice.
-
-> [!NOTE]
-> Contrary to popular belief, this module was never intended to implement "generational rollbacks". The *unique* directory layout was created to enable atomic updates for flatpak.
