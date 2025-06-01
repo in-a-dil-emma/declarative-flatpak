@@ -16,11 +16,16 @@
           "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
           "flathub-beta" = "https://flathub.org/beta-repo/flathub-beta.flatpakrepo";
         };
+        #flatpakDir = "${config.home.homeDirectory}/flatpak";
       };
 
-      home.file.".zshrc".text = "";
-
-      home.stateVersion = lib.trivial.release;
+      home = {
+        file.".zshrc".text = "";
+        stateVersion = lib.trivial.release;
+        sessionVariables = {
+          #FLATPAK_USER_DIR = config.services.flatpak.flatpakDir;
+        };
+      };
     };
   };
 }

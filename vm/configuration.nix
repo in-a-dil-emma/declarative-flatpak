@@ -22,13 +22,9 @@
       "flathub:runtime/org.freedesktop.Platform.VulkanLayer.MangoHud//21.08:9ee91f5c7944516169bb7a327d81ac7b08b149b3cd238b7a11a61bc1abe28ba9"
       "flathub-beta:runtime/com.valvesoftware.Steam.Utility.vkBasalt//beta" # this runtime is cursed for some reason
       "flathub:app/org.kde.index//stable"
-      
       "flathub-beta:app/org.mozilla.firefox//stable"
-      
       "launcher-moe:app/moe.launcher.honkers-launcher/x86_64/master"
-
       "flathub:runtime/org.gtk.Gtk3theme.Breeze//3.22"
-
       "flathub:${./files/io.gitlab.daikhan.stable.flatpakref}"
       ":${./files/xwaylandvideobridge.flatpak}"
     ];
@@ -55,6 +51,7 @@
         # Intentionally leave out everything for bugfix
       };
     };
+    flatpakDir = "/flatpak";
   };
 
   # Dev env stuff
