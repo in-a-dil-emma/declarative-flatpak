@@ -2,234 +2,275 @@
 
 let
   inherit (pkgs) curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
-  inherit (lib) makeBinPath mkOption;
+  inherit (builtins) concatStringsSep map filter toJSON match attrValues mapAttrs attrNames;
+  inherit (lib) makeBinPath mkOption optionalString;
 
   inherit (import ../lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
-  
+
   cfg = config.services.flatpak;
-  fargs = if is-hm then "--user" else "--system";
   is-hm = config ? home && lib ? hm;
-  filecfg = writeText "flatpak-gen-config" (builtins.toJSON {
-    inherit (cfg) overrides packages remotes flatpakDir preRemotesCommand preInstallCommand preSwitchCommand;
+  filecfg = writeText "flatpak-gen-config" (toJSON {
+    inherit (cfg) overrides packages remotes flatpakDir preRemotesCommand preInstallCommand preSwitchCommand UNCHECKEDpostEverythingCommand;
   });
-in {
-  options.services.flatpak.mainScript = mkOption {
-    internal = true;
-  };
-
-  config.services.flatpak.mainScript = writeShellScript "setup-flatpaks" ''
-    ${if cfg.debug then ''
-    set -v
-    '' else ""}
-    
-    PATH=${makeBinPath [ curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}
-    
-    ${if cfg.waitForInternet then ''
-    # Failsafe
-    _count=0
-    until curl -fsS github.com &>/dev/null; do
-      if [ $_count -ge 60 ]; then
-        echo "failed to acquire an internet connection in 60 seconds."
-        exit 1
+  system-user-switch = if is-hm then "--user" else "--system";
+  script = {
+    config-diff = optionalString (!cfg.forceRunOnActivation) ''
+      if [ -e "$DATA_DIR/config" ] && cmp -s ${filecfg} "$DATA_DIR/config"; then
+        echo "Configs do not differ, therefore I won't do anything. You may change this default behaviour."
+        exit 0
       fi
-      _count=$(($_count + 1))
-      sleep 1
-    done
-    unset _count
-    echo "internet connected"
-    '' else ""}
+    '';
+    setup = ''
+      set -vx
+      set -eu
+      shopt -s extglob nullglob
+    '';
+    vars = ''
+      PATH="${makeBinPath [ curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}"
 
-    set -eu
+      LANG=C
+      MODULE_DIR_INFIX=".module"
+      CURR_BOOTID=$(journalctl --list-boots --no-pager | grep -E '^ +0' | awk '{print$2}') || \
+        CURR_BOOTID=1
 
-    # --- BEGIN VARIABLES ---
-    
-    LANG=C
-    MODULE_PREFIX=".module"
-    CURR_BOOTID=$(journalctl --list-boots --no-pager | grep -E '^ +0' | awk '{print$2}') || \
-      CURR_BOOTID=1
+      ${if is-hm then ''
+      CURRENT_FLATPAK_DIR="${config.xdg.dataHome}/flatpak"
+      '' else ''
+      CURRENT_FLATPAK_DIR="/var/lib/flatpak"
+      ''}
+      ${optionalString (cfg.flatpakDir != null) ''
+      CURRENT_FLATPAK_DIR="${cfg.flatpakDir}"
+      ''}
 
-    ${if is-hm then ''
-    FLATPAK_DIR="${config.xdg.dataHome}/flatpak"
-    '' else ''
-    FLATPAK_DIR="/var/lib/flatpak"
-    ''}
+      DATA_DIR="$CURRENT_FLATPAK_DIR/$MODULE_DIR_INFIX"
 
-    ${if cfg.flatpakDir != null then ''
-    # user wishes for a separate flatpak dir
-    FLATPAK_DIR=${cfg.flatpakDir}
-    '' else ""}
+      NEW_FLATPAK_INSTALL="$DATA_DIR/new"
 
-    DATA_DIR="$FLATPAK_DIR/$MODULE_PREFIX"
-    
-    TARGET_DIR="$DATA_DIR/new"
-    
-    export FLATPAK_USER_DIR="$TARGET_DIR"
-    export FLATPAK_SYSTEM_DIR="$TARGET_DIR"
-    
-    TRASH_DIR="$DATA_DIR/trash/$CURR_BOOTID/$(uuidgen)"
+      export FLATPAK_USER_DIR="$NEW_FLATPAK_INSTALL"
+      export FLATPAK_SYSTEM_DIR="$NEW_FLATPAK_INSTALL"
 
-    # --- END VARIABLES ---
+      TRASH_DIR="$DATA_DIR/trash/$CURR_BOOTID/$(uuidgen)"
 
-    rm -rf "$TARGET_DIR"
-    [ -d "$DATA_DIR/trash" ] && \
-      find "$DATA_DIR/trash" -mindepth 1 -maxdepth 1 -not -name "$CURR_BOOTID" | while read r; do
-        rm -rf "$r"
-      done
-    
-    mkdir -pm 755 "$DATA_DIR"
-    mkdir -pm 755 "$TARGET_DIR"
-    mkdir -pm 755 "$FLATPAK_DIR"
-    mkdir -pm 755 "$TRASH_DIR"
+      trap 'touch "$DATA_DIR"/repo-dirty' ERR
+    '';
+    trash = ''
+      rm -rf "$DATA_DIR"/repo-save
+      rm -rf "$DATA_DIR"/install-data
 
-    # "steal" the repo from last install
-    if [ -d "$FLATPAK_DIR/repo" ]; then
-      echo "recycling existing repo..."
-      cp -al --reflink=auto "$FLATPAK_DIR/repo" "$TARGET_DIR/repo"
-      ostree remote list --repo="$TARGET_DIR/repo" | while read r; do
-        ostree remote delete --repo="$TARGET_DIR/repo" --if-exists "$r"
-      done
-      rm -rf "$TARGET_DIR/repo/refs/*"
-      rm -rf "$TARGET_DIR/repo/extensions"
-    else
-      [ -L "$TARGET_DIR/repo" ] && rm -f "$TARGET_DIR/repo"
-      ostree init --repo="$TARGET_DIR/repo" --mode=bare-user-only
-    fi
-
-    ${cfg.preRemotesCommand}
-
-    ${builtins.toString (builtins.attrValues (builtins.mapAttrs (name: value: ''
-    echo "adding remote ${name} with URL ${value}"
-    flatpak ${fargs} remote-add --if-not-exists ${name} ${value}
-    '') cfg.remotes))}
-
-    ${cfg.preInstallCommand}
-
-    rm -rf $DATA_DIR/install-data
-    mkdir -p $DATA_DIR/install-data
-    counter=0
-
-    for i in ${builtins.toString (builtins.filter (x: builtins.match ".+${ffile}$" x == null) cfg.packages)}; do
-      _remote=$(grep -Eo '^${fremote}' <<< $i)
-      _id=$(grep -Eo '${ftype}/${fref}/${farch}/${fbranch}(:${fcommit})?' <<< $i)
-      _commit=$(grep -Eo ':${fcommit}$' <<< $_id) || true
-      if [ -n "$_commit" ]; then
-        _commit=$(tail -c-$(($(wc -c <<< $_commit) - 1)) <<< $_commit)
-        _id=$(head -c-$(($(wc -c <<< $_commit) + 1)) <<< $_id)
+      # we can try recycling the in-progress repo
+      if [ -d "$NEW_FLATPAK_INSTALL"/repo ]; then
+        echo "in-progress state found, we can recycle it"
+        mv "$NEW_FLATPAK_INSTALL"/repo "$DATA_DIR"/repo-save
       fi
 
-      mkdir -p $DATA_DIR/install-data/$_remote
-      echo -n "$_id:" >>$DATA_DIR/install-data/$_remote/$counter
-      [ -n "$_commit" ] && echo -n "$_commit" >>$DATA_DIR/install-data/$_remote/$counter
+      rm -rf "$NEW_FLATPAK_INSTALL"
 
-      counter=$[ counter + 1 ]
-    done
-
-    unset counter
-
-    pushd $DATA_DIR/install-data
-    if [ $(find . -mindepth 1 | wc -l) -gt 0 ]; then
-      for rem in *; do
-        ref_list=""
-        pushd $DATA_DIR/install-data/$rem
-        for ref in *; do
-          set +e
-          IFS=: read _id _commit < $ref
-          set -e
-          
-          ref_list="$ref_list $_id"
+      [ -d "$DATA_DIR/trash" ] && \
+        find "$DATA_DIR/trash" -mindepth 1 -maxdepth 1 -not -name "$CURR_BOOTID" | while read r; do
+          systemd-run ${system-user-switch} rm -rf "$r"
         done
-        popd
+    '';
+    dirs = ''
+      mkdir -pm 755 "$DATA_DIR"
+      mkdir -pm 755 "$NEW_FLATPAK_INSTALL"
+      mkdir -pm 755 "$CURRENT_FLATPAK_DIR"
+      mkdir -pm 755 "$TRASH_DIR"
 
-        flatpak ${fargs} install --noninteractive --no-auto-pin $rem $ref_list
+      mkdir -p "$DATA_DIR"/install-data
+      mkdir -p "$NEW_FLATPAK_INSTALL"/overrides
+    '';
+    recycle-repo = ''
+      if [ -e "$DATA_DIR"/repo-dirty ]; then
+        echo "Service did not shut down clean. NOT recycling previous runs."
+        rm -f "$DATA_DIR"/repo-dirty
+      else
+        touch "$DATA_DIR"/repo-dirty
+        if [ -d "$DATA_DIR"/repo-save ]; then
+          mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
+        elif [ -d "$CURRENT_FLATPAK_DIR"/repo ]; then
+          echo "recycling existing repo..."
+          cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
+        else
+          ostree init --repo="$NEW_FLATPAK_INSTALL/repo" --mode=bare-user-only
+        fi
+        rm -rf \
+          "$NEW_FLATPAK_INSTALL"/repo/refs \
+          "$NEW_FLATPAK_INSTALL"/repo/extensions
+        mkdir -p \
+          "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
+          "$NEW_FLATPAK_INSTALL"/repo/extensions
+        ostree remote list --repo="$NEW_FLATPAK_INSTALL/repo" | while read r; do
+          ostree remote delete --repo="$NEW_FLATPAK_INSTALL/repo" --if-exists "$r"
+        done
+        rm -f "$DATA_DIR"/repo-dirty
+      fi
+    '';
+    add-remotes = toString (attrValues (mapAttrs (name: value: ''
+      echo "adding remote ${name} with URL ${value}"
+      flatpak ${system-user-switch} remote-add --if-not-exists "${name}" "${value}" || exit 1
+    '') cfg.remotes));
+    prep-install = ''
+      counter=0
+
+      for i in ${toString (filter (x: match ".+${ffile}$" x == null) cfg.packages)}; do
+        _remote="$(grep -Eo '^${fremote}' <<< $i)"
+        _id="$(grep -Eo '${ftype}/${fref}/${farch}/${fbranch}(:${fcommit})?' <<< $i)"
+        _commit="$(grep -Eo ':${fcommit}$' <<< $_id)" || true
+        if [ -n "$_commit" ]; then
+          _commit=$(tail -c-$(($(wc -c <<< $_commit) - 1)) <<< $_commit)
+          _id=$(head -c-$(($(wc -c <<< $_commit) + 1)) <<< $_id)
+        fi
+
+        mkdir -p "$DATA_DIR"/install-data/"$_remote"/$counter
+        echo -n "$_id" >>"$DATA_DIR"/install-data/"$_remote"/$counter/id
+        [ -n "$_commit" ] && echo -n "$_commit" >>"$DATA_DIR"/install-data/"$_remote"/$counter/commit
+
+        : $(( counter++ ))
+      done
+
+      unset counter
+    '';
+    install-remote = ''
+      pushd "$DATA_DIR"/install-data
+      for rem in *; do
+        pushd "$DATA_DIR"/install-data/"$rem"
+
+        ref_list=()
+        for ref in *; do
+          _id="$(<"$ref"/id)"
+
+          ref_list+=("$_id")
+        done
+        echo "|$rem|''${ref_list[*]}|"
+
+        for (( i = 0; i < ''${#ref_list[@]}; i += 10 )); do
+          flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$rem" "''${ref_list[@]:i:10}" || exit 1
+        done
 
         unset ref_list
 
-        pushd $DATA_DIR/install-data/$rem
         for ref in *; do
-          set +e
-          read _id _commit < $ref
-          set -e
-          
-          if [ -n "$_commit" ]; then
-            if ! flatpak update --commit="$_commit" $_id; then
-              echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
-            fi
+          [ ! -e "$ref"/commit ] && continue
+
+          _id="$(<"$ref"/id)"
+          _commit="$(<"$ref"/commit)"
+
+          if ! flatpak update --commit="$_commit" "$_id"; then
+            echo "failed to update to commit \"$_commit\". Check if the commit is correct - $_id"
           fi
         done
+
         popd
       done
-    echo
-      echo "nothing to install from repos"
-    fi
-    popd
+      popd
+    '';
+    install-local = ''
+      echo "installing out-of-tree refs"
+      for i in ${toString (filter (x: match ":.+\.flatpak$" x != null) cfg.packages)}; do
+        _id="$(grep -Eo ':.+\.flatpak$' <<< $i | tail -c+2)"
 
-    unset counter
+        flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$_id" || exit 1
+      done
+      for i in ${toString (filter (x: match ":.+\.flatpakref$" x != null) cfg.packages)}; do
+        _remote="$(grep -Eo '^${fremote}:' <<< $i | head -c-2)"
+        _id="$(grep -Eo ':.+\.flatpakref$' <<< $i | tail -c+2)"
 
-    echo "installing out-of-tree refs"
-    for i in ${builtins.toString (builtins.filter (x: builtins.match ":.+\.flatpak$" x != null) cfg.packages)}; do
-      _id=$(grep -Eo ':.+\.flatpak$' <<< $i | tail -c+2)
+        flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$_remote" "$_id" || exit 1
+      done
+    '';
+    prune-ostree = ''
+      #ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
+      ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo --refs-only
+      ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo
+    '';
+    trash-old = ''
+      echo "moving old data to trash"
 
-      flatpak ${fargs} install --noninteractive --no-auto-pin $_id
-    done
-    for i in ${builtins.toString (builtins.filter (x: builtins.match ":.+\.flatpakref$" x != null) cfg.packages)}; do
-      _remote=$(grep -Eo '^${fremote}:' <<< $i | head -c-2)
-      _id=$(grep -Eo ':.+\.flatpakref$' <<< $i | tail -c+2)
+      # Move the current installation into the bin
+      find "$CURRENT_FLATPAK_DIR" -mindepth 1 -maxdepth 1 -not \( -name "$MODULE_DIR_INFIX" -o -name 'db' \) | while read r; do
+        mv "$r" "$TRASH_DIR"/"''${r##*/}"
+      done
+    '';
+    overrides = ''
+      echo "installing overrides"
 
-      flatpak ${fargs} install --noninteractive --no-auto-pin $_remote $_id
-    done
+      ${concatStringsSep "\n" (map (ref: ''
+        cat ${cfg.overrides.${ref}.source} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
+      '') (attrNames cfg.overrides))}
+    '';
+    exports = optionalString (cfg.flatpakDir != null) ''
+      if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
+        # Dereference because exports are symlinks by default
+        rsync -aL "$NEW_FLATPAK_INSTALL"/exports/ "$NEW_FLATPAK_INSTALL"/processed-exports/
 
-    ${cfg.preSwitchCommand}
+        # Then begin "processing" the exports to make them point to the correct locations
+        [ -d "$NEW_FLATPAK_INSTALL"/processed-exports/bin ] && \
+          find "$NEW_FLATPAK_INSTALL"/processed-exports/bin \
+            -type f -exec sed -i "s,exec flatpak run,FLATPAK_USER_DIR=\"$CURRENT_FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$CURRENT_FLATPAK_DIR\" exec flatpak run,gm" '{}' \;
+        [ -d "$NEW_FLATPAK_INSTALL"/processed-exports/share/applications ] && \
+          find "$NEW_FLATPAK_INSTALL"/processed-exports/share/applications \
+            -type f -exec sed -i "s,Exec=flatpak run,Exec=env FLATPAK_USER_DIR=\"$CURRENT_FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$CURRENT_FLATPAK_DIR\" flatpak run,gm" '{}' \;
 
-    ostree prune --repo="$TARGET_DIR/repo" --refs-only
-    ostree prune --repo="$TARGET_DIR/repo"
-    
-    echo "installing files"
-    
-    # Move the current installation into the bin
-    find "$FLATPAK_DIR" -mindepth 1 -maxdepth 1 -not \( -name "$MODULE_PREFIX" -o -name 'db' \) | while read r; do
-      mv "$r" "$TRASH_DIR/''${r##*/}"
-    done
-    
-    # Install overrides
-    rm -rf "$TARGET_DIR/overrides"
-    mkdir -p "$TARGET_DIR/overrides"
-    ${builtins.concatStringsSep "\n" (builtins.map (ref: ''
-    cat ${cfg.overrides.${ref}.source} >"$TARGET_DIR/overrides/${ref}"
-    '') (builtins.attrNames cfg.overrides))}
-    
-    ${if cfg.flatpakDir != null then ''
-    if [ -d "$TARGET_DIR/exports" ]; then
-      # First, make sure we didn't accidentally copy over the exports
-      rm -rf "$TARGET_DIR/processed-exports"
-      
-      # Dereference because exports are symlinks by default
-      rsync -aL "$TARGET_DIR/exports/" "$TARGET_DIR/processed-exports"
-    
-      # Then begin "processing" the exports to make them point to the correct locations
-      [ -d "$TARGET_DIR/processed-exports/bin" ] && \
-        find "$TARGET_DIR/processed-exports/bin" \
-          -type f -exec sed -i "s,exec flatpak run,FLATPAK_USER_DIR=\"$FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$FLATPAK_DIR\" exec flatpak run,gm" '{}' \;
-      [ -d "$TARGET_DIR/processed-exports/share/applications" ] && \
-        find "$TARGET_DIR/processed-exports/share/applications" \
-          -type f -exec sed -i "s,Exec=flatpak run,Exec=env FLATPAK_USER_DIR=\"$FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$FLATPAK_DIR\" flatpak run,gm" '{}' \;
-      
-      rm -rf "$TARGET_DIR/exports"
-      mv "$TARGET_DIR/processed-exports/" "$TARGET_DIR/exports"
-    fi
-    '' else ""}
+        rsync -a --remove-source-files --delete "$NEW_FLATPAK_INSTALL"/processed-exports/ "$NEW_FLATPAK_INSTALL"/exports/
+      fi
+    '';
+    install-gen = ''
+      echo "installing flatpak data"
 
-    # Now we install/apply our changes
-    find "$TARGET_DIR" -mindepth 1 -maxdepth 1 | while read r; do
-      [ -e "$FLATPAK_DIR/''${r##*/}" ] && rm -rf "$FLATPAK_DIR/''${r##*/}"
-      mv "$r" "$FLATPAK_DIR/''${r##*/}"
-    done
+      touch "$DATA_DIR"/repo-dirty
+      pushd "$NEW_FLATPAK_INSTALL"
+      for i in *; do
+        rsync -a --remove-source-files --delete "$i"/ "$CURRENT_FLATPAK_DIR"/"$i"/ &
+      done
+      popd
+      wait
+      rm -f "$DATA_DIR"/repo-dirty
+    '';
+    link-config = ''
+      ln -snfT ${filecfg} "$DATA_DIR"/config
+    '';
+    cleanup-post = ''
+      rm -rf "$NEW_FLATPAK_INSTALL"
+      unset FLATPAK_USER_DIR FLATPAK_SYSTEM_DIR
+    '';
+  };
+in {
+  options.services.flatpak.mainScript = {
+    activation = mkOption {
+      internal = true;
+    };
+    auto = mkOption {
+      internal = true;
+    };
+  };
 
-    rm -rf "$TARGET_DIR"
-
-    ln -snfT ${filecfg} "$DATA_DIR/config"
-
-    unset FLATPAK_USER_DIR FLATPAK_SYSTEM_DIR
-
-    ${cfg.UNCHECKEDpostEverythingCommand}
-  '';
+  config.services.flatpak.mainScript = {
+    activation = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
+      script.vars
+      script.config-diff
+      config.services.flatpak.mainScript.auto
+    ]);
+    auto = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
+      script.setup
+      script.vars
+      script.trash
+      script.dirs
+      script.recycle-repo
+      cfg.preRemotesCommand
+      script.add-remotes
+      cfg.preInstallCommand
+      script.prep-install
+      script.install-remote
+      script.install-local
+      cfg.preSwitchCommand
+      script.prune-ostree
+      script.trash-old
+      script.overrides
+      script.exports
+      script.install-gen
+      script.link-config
+      script.cleanup-post
+      cfg.UNCHECKEDpostEverythingCommand
+    ]);
+  };
 }
