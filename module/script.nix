@@ -10,7 +10,7 @@ let
   cfg = config.services.flatpak;
   is-hm = config ? home && lib ? hm;
   filecfg = writeText "flatpak-gen-config" (toJSON {
-    inherit (cfg) overrides packages remotes flatpakDir preRemotesCommand preInstallCommand preSwitchCommand UNCHECKEDpostEverythingCommand;
+    inherit (cfg) overrides packages remotes preRemotesCommand preInstallCommand preSwitchCommand UNCHECKEDpostEverythingCommand;
   });
   system-user-switch = if is-hm then "--user" else "--system";
   script = {
