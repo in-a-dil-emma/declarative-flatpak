@@ -52,8 +52,9 @@ let
       systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
 
       rm -f "$DATA_DIR"/config
-      rm -rf "$DATA_DIR"/repo-save
-      rm -rf "$DATA_DIR"/install-data
+      rm -rf "$DATA_DIR"/repo-save \
+        "$DATA_DIR"/install-data \
+        "$DATA_DIR"/processed-exports
 
       # we can try recycling the in-progress repo
       if [ -d "$NEW_FLATPAK_INSTALL"/repo ]; then
