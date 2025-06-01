@@ -33,11 +33,7 @@ let
       CURR_BOOTID=$(journalctl --list-boots --no-pager | grep -E '^ +0' | awk '{print$2}') || \
         CURR_BOOTID=1
 
-      ${if is-hm then ''
-      CURRENT_FLATPAK_DIR="${config.xdg.dataHome}/flatpak"
-      '' else ''
-      CURRENT_FLATPAK_DIR="/var/lib/flatpak"
-      ''}
+      CURRENT_FLATPAK_DIR="${cfg.internal.targetDir}"
       ${optionalString (cfg.flatpakDir != null) ''
       CURRENT_FLATPAK_DIR="${cfg.flatpakDir}"
       ''}
