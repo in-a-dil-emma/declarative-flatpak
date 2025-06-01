@@ -24,8 +24,7 @@ let
       set -vx
       set -eu
       shopt -s extglob nullglob
-    '';
-    vars = ''
+
       PATH="${makeBinPath [ curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}"
 
       LANG=C
@@ -49,7 +48,7 @@ let
 
       trap 'touch "$DATA_DIR"/repo-dirty' ERR
     '';
-    trash = ''
+    dirs = ''
       rm -rf "$DATA_DIR"/repo-save
       rm -rf "$DATA_DIR"/install-data
 
@@ -62,8 +61,6 @@ let
       rm -rf "$NEW_FLATPAK_INSTALL"
 
       systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
-    '';
-    dirs = ''
       mkdir -pm 755 "$DATA_DIR"
       mkdir -pm 755 "$NEW_FLATPAK_INSTALL"
       mkdir -pm 755 "$CURRENT_FLATPAK_DIR"
@@ -176,10 +173,6 @@ let
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo --refs-only
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo
     '';
-    trash-old = ''
-      echo "Moving old data for future deletion"
-      mv "$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db) "$TRASH_DIR"
-    '';
     overrides = ''
       echo "Installing overrides"
 
@@ -203,8 +196,10 @@ let
         mv "$NEW_FLATPAK_INSTALL"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
       fi
     '';
-    install-gen = ''
       echo "Installing flatpak data"
+    switch = ''
+      echo "Moving old data for future deletion"
+      mv "$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db) "$TRASH_DIR"
 
       touch "$DATA_DIR"/repo-dirty
       pushd "$NEW_FLATPAK_INSTALL"
@@ -214,11 +209,7 @@ let
       popd
       wait
       rm -f "$DATA_DIR"/repo-dirty
-    '';
-    link-config = ''
       ln -snfT ${filecfg} "$DATA_DIR"/config
-    '';
-    cleanup-post = ''
       rm -rf "$NEW_FLATPAK_INSTALL"
       unset FLATPAK_USER_DIR FLATPAK_SYSTEM_DIR
     '';
@@ -226,14 +217,12 @@ let
 in {
   config.services.flatpak.internal.mainScript = {
     activation = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
-      script.vars
+      script.setup
       script.config-diff
       config.services.flatpak.internal.mainScript.auto
     ]);
     auto = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
       script.setup
-      script.vars
-      script.trash
       script.dirs
       script.recycle-repo
       cfg.preRemotesCommand
@@ -244,12 +233,9 @@ in {
       script.install-local
       cfg.preSwitchCommand
       script.prune-ostree
-      script.trash-old
       script.overrides
       script.exports
-      script.install-gen
-      script.link-config
-      script.cleanup-post
+      script.switch
       cfg.UNCHECKEDpostEverythingCommand
     ]);
   };
