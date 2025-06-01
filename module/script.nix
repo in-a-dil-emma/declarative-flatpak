@@ -176,17 +176,18 @@ let
     exports = optionalString (cfg.flatpakDir != null) ''
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
         # Dereference because exports are symlinks by default
-        rsync -aL --remove-source-files "$NEW_FLATPAK_INSTALL"/exports "$NEW_FLATPAK_INSTALL"/processed-exports
+        rsync -aL --delete --remove-source-files "$NEW_FLATPAK_INSTALL"/exports/ "$DATA_DIR"/processed-exports/
+        rm -rf "$NEW_FLATPAK_INSTALL"/exports
 
         # Then begin "processing" the exports to make them point to the correct locations
-        [ -d "$NEW_FLATPAK_INSTALL"/processed-exports/bin ] && \
-          find "$NEW_FLATPAK_INSTALL"/processed-exports/bin \
-            -type f -exec sed -i "s,exec flatpak run,FLATPAK_USER_DIR=\"$CURRENT_FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$CURRENT_FLATPAK_DIR\" exec flatpak run,gm" '{}' \;
-        [ -d "$NEW_FLATPAK_INSTALL"/processed-exports/share/applications ] && \
-          find "$NEW_FLATPAK_INSTALL"/processed-exports/share/applications \
-            -type f -exec sed -i "s,Exec=flatpak run,Exec=env FLATPAK_USER_DIR=\"$CURRENT_FLATPAK_DIR\" FLATPAK_SYSTEM_DIR=\"$CURRENT_FLATPAK_DIR\" flatpak run,gm" '{}' \;
+        [ -d "$DATA_DIR"/processed-exports/bin ] && \
+          find "$DATA_DIR"/processed-exports/bin \
+            -type f -exec sed -i 's,exec flatpak run,FLATPAK_USER_DIR='"'$CURRENT_FLATPAK_DIR'"' FLATPAK_SYSTEM_DIR='"'$CURRENT_FLATPAK_DIR'"' exec flatpak run,gm' '{}' \;
+        [ -d "$DATA_DIR"/processed-exports/share/applications ] && \
+          find "$DATA_DIR"/processed-exports/share/applications \
+            -type f -exec sed -i 's,Exec=flatpak run,Exec=env FLATPAK_USER_DIR='"'$CURRENT_FLATPAK_DIR'"' FLATPAK_SYSTEM_DIR='"'$CURRENT_FLATPAK_DIR'"' flatpak run,gm' '{}' \;
 
-        mv "$NEW_FLATPAK_INSTALL"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
+        mv "$DATA_DIR"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
       fi
     '';
     switch = ''
