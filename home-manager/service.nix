@@ -29,6 +29,9 @@ in
 
 {
   config.systemd.user = {
+    tmpfiles.rules = [
+      "d ${cfg.internal.targetDir} 750 - - - -"
+    ];
     services."manage-flatpaks-activation" = pipe {
       Unit = rec {
         Conflicts = "manage-flatpaks-auto.service";
