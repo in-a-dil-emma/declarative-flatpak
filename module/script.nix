@@ -46,7 +46,12 @@ let
       export FLATPAK_USER_DIR="$NEW_FLATPAK_INSTALL"
       export FLATPAK_SYSTEM_DIR="$NEW_FLATPAK_INSTALL"
 
-      trap 'touch "$DATA_DIR"/repo-dirty' ERR
+      function fail {
+        # a partially copied ostree repo cannot be trusted
+        # in the off-chance that a flatpak command fails this will get created and the second service run will start from scratch
+        touch "$NEW_FLATPAK_INSTALL"/repo/dirty
+      }
+      trap 'fail' ERR
     '';
     dirs = ''
       systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
@@ -57,7 +62,7 @@ let
         "$DATA_DIR"/processed-exports
 
       # we can try recycling the in-progress repo
-      if [ -d "$NEW_FLATPAK_INSTALL"/repo ]; then
+      if [ -d "$NEW_FLATPAK_INSTALL"/repo ] && [ ! -e "$NEW_FLATPAK_INSTALL"/repo/dirty ]; then
         echo "Found in-progress state, we can recycle it"
         mv "$NEW_FLATPAK_INSTALL"/repo "$DATA_DIR"/repo-save
       fi
@@ -67,30 +72,30 @@ let
       mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides
     '';
     recycle-repo = ''
-      if [ -e "$DATA_DIR"/repo-dirty ]; then
-        echo "Service did not shut down clean. NOT recycling previous runs"
-        rm -f "$DATA_DIR"/repo-dirty
+      if [ -d "$DATA_DIR"/repo-save ]; then
+        touch "$DATA_DIR"/repo-save/dirty # has to be before mv because mv is not guaranteed to be atomic
+        mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
+        ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
+      elif [ -d "$CURRENT_FLATPAK_DIR"/repo ] && [ ! -e "$CURRENT_FLATPAK_DIR"/repo/dirty ]; then
+        echo "Recycling existing repo"
+        touch "$CURRENT_FLATPAK_DIR"/repo/dirty
+        cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
+        ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
+        rm "$CURRENT_FLATPAK_DIR"/repo/dirty
       else
-        touch "$DATA_DIR"/repo-dirty
-        if [ -d "$DATA_DIR"/repo-save ]; then
-          mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
-        elif [ -d "$CURRENT_FLATPAK_DIR"/repo ]; then
-          echo "Recycling existing repo"
-          cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
-        else
-          ostree init --repo="$NEW_FLATPAK_INSTALL"/repo --mode=bare-user-only
-        fi
-        rm -rf \
-          "$NEW_FLATPAK_INSTALL"/repo/refs/* \
-          "$NEW_FLATPAK_INSTALL"/repo/extensions/*
-        mkdir -p \
-          "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
-          "$NEW_FLATPAK_INSTALL"/repo/extensions
-        ostree remote list --repo="$NEW_FLATPAK_INSTALL"/repo | while read r; do
-          ostree remote delete --repo="$NEW_FLATPAK_INSTALL"/repo --if-exists "$r"
-        done
-        rm -f "$DATA_DIR"/repo-dirty
+        echo "Creating repo from scratch"
+        ostree init --repo="$NEW_FLATPAK_INSTALL"/repo --mode=bare-user-only
       fi
+      touch "$NEW_FLATPAK_INSTALL"/repo/dirty
+      ostree remote list --repo="$NEW_FLATPAK_INSTALL"/repo | while read r; do
+        ostree remote delete --repo="$NEW_FLATPAK_INSTALL"/repo --if-exists "$r"
+      done
+      rm -rf "$NEW_FLATPAK_INSTALL"/repo/refs/* \
+        "$NEW_FLATPAK_INSTALL"/repo/extensions/*
+      mkdir -p \
+        "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
+        "$NEW_FLATPAK_INSTALL"/repo/extensions
+      rm -f "$NEW_FLATPAK_INSTALL"/repo/dirty
     '';
     add-remotes = toString (attrValues (mapAttrs (name: value: ''
       echo "Adding remote ${name} with URL ${value}"
@@ -109,8 +114,8 @@ let
         fi
 
         mkdir -p "$DATA_DIR"/install-data/"$_remote"/$counter
-        echo -n "$_id" >>"$DATA_DIR"/install-data/"$_remote"/$counter/id
-        [ -n "$_commit" ] && echo -n "$_commit" >>"$DATA_DIR"/install-data/"$_remote"/$counter/commit
+        echo -n "$_id" >"$DATA_DIR"/install-data/"$_remote"/$counter/id
+        [ -n "$_commit" ] && echo -n "$_commit" >"$DATA_DIR"/install-data/"$_remote"/$counter/commit
 
         : $(( counter++ ))
       done
@@ -128,6 +133,8 @@ let
           ref_list+=("$_id")
         done
 
+        [ ''${#ref_list[@]} -gt 0 ] || break
+
         for (( i = 0; i < ''${#ref_list[@]}; i += 10 )); do
           flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$rem" "''${ref_list[@]:i:10}" || exit 1
         done
@@ -142,6 +149,7 @@ let
 
           if ! flatpak update --commit="$_commit" "$_id"; then
             echo "Failed to update ref $_id to commit $_commit. Verified if the commit is correct"
+            exit 1
           fi
         done
 
@@ -201,13 +209,13 @@ let
       }
 
       echo "Installing flatpak data"
-      touch "$DATA_DIR"/repo-dirty
       pushd "$NEW_FLATPAK_INSTALL"
+      touch repo/dirty
       for i in *; do
         mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
       done
       popd
-      rm -f "$DATA_DIR"/repo-dirty
+      rm "$CURRENT_FLATPAK_DIR"/repo/dirty
 
       echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
