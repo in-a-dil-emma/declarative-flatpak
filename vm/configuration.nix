@@ -51,7 +51,7 @@
         # Intentionally leave out everything for bugfix
       };
     };
-    onCalendar = "*-*-* *:*:00";
+    onCalendar = "*-*-* *:00,15,30,45:00";
     flatpakDir = "/flatpak";
     veryVerbose = true;
   };
