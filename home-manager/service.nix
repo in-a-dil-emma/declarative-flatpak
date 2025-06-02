@@ -33,18 +33,16 @@ in
       "d ${cfg.internal.targetDir} 750 - - - -"
     ];
     services."manage-flatpaks-activation" = pipe {
-      Unit = rec {
-        Conflicts = "manage-flatpaks-auto.service";
+      Unit = {
+        Before = "manage-flatpaks-auto.service";
         Description = "Manage flatpaks";
-        Before = Conflicts;
       };
       Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
     } [ applyUnitOrdering applySharedServiceConfig (mkIf cfg.enable) ];
     services."manage-flatpaks-auto" = pipe {
-      Unit = rec {
-        Conflicts = "manage-flatpaks-activation.service";
+      Unit = {
+        After = "manage-flatpaks-activation.service";
         Description = "Manage flatpaks";
-        After = Conflicts;
       };
       Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
     } [ applySharedServiceConfig (mkIf cfg.enable) ];

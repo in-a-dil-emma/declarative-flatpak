@@ -41,18 +41,16 @@ in
       "d ${cfg.internal.targetDir} 750 root users - -"
     ];
     services."manage-flatpaks-activation" = pipe {
-      unitConfig = rec {
-        Conflicts = "manage-flatpaks-auto.service";
+      unitConfig = {
+        Before = "manage-flatpaks-auto.service";
         Description = "Manage flatpaks";
-        Before = Conflicts;
       };
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
     } [ applyUnitOrdering applySharedServiceConfig (mkIf cfg.enable) ];
     services."manage-flatpaks-auto" = pipe {
-      unitConfig = rec {
-        Conflicts = "manage-flatpaks-activation.service";
+      unitConfig = {
+        After = "manage-flatpaks-activation.service";
         Description = "Manage flatpaks";
-        After = Conflicts;
       };
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
     } [ applySharedServiceConfig (mkIf cfg.enable) ];
