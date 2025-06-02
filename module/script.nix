@@ -56,6 +56,7 @@ let
     dirs = ''
       systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
 
+      # it's absence is our indicator that the module is in the process of building a new generation
       rm -f "$DATA_DIR"/config
       rm -rf "$DATA_DIR"/repo-save \
         "$DATA_DIR"/install-data \
@@ -148,7 +149,7 @@ let
           _commit="$(<"$ref"/commit)"
 
           if ! flatpak update --commit="$_commit" "$_id"; then
-            echo "Failed to update ref $_id to commit $_commit. Verified if the commit is correct"
+            echo "Failed to update ref $_id to commit $_commit. Verify if the commit is correct"
             exit 1
           fi
         done
@@ -172,7 +173,6 @@ let
       done
     '';
     prune-ostree = ''
-      #ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo --refs-only
       ostree prune --repo="$NEW_FLATPAK_INSTALL"/repo
     '';

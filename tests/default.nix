@@ -12,7 +12,6 @@ in runNixOSTest {
 
     services.flatpak = {
       enable = true;
-      waitForInternet = false;
     };
 
     xdg.portal = {
