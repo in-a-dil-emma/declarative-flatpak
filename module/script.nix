@@ -80,7 +80,7 @@ let
       elif [ -d "$CURRENT_FLATPAK_DIR"/repo ] && [ ! -e "$CURRENT_FLATPAK_DIR"/repo/dirty ]; then
         echo "Recycling existing repo"
         touch "$CURRENT_FLATPAK_DIR"/repo/dirty
-        cp -al --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
+        cp -a --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
         ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
         rm "$CURRENT_FLATPAK_DIR"/repo/dirty
       else
@@ -96,7 +96,7 @@ let
       mkdir -p \
         "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
         "$NEW_FLATPAK_INSTALL"/repo/extensions
-      rm -f "$NEW_FLATPAK_INSTALL"/repo/dirty
+      rm "$NEW_FLATPAK_INSTALL"/repo/dirty
     '';
     add-remotes = toString (attrValues (mapAttrs (name: value: ''
       echo "Adding remote ${name} with URL ${value}"
@@ -128,19 +128,11 @@ let
       for rem in *; do
         pushd "$DATA_DIR"/install-data/"$rem"
 
-        ref_list=()
         for ref in *; do
           _id="$(<"$ref"/id)"
-          ref_list+=("$_id")
+          # the cli doesn't support specifying multiple refs alongside the repo (?)
+          flatpak ${system-user-switch} install --noninteractive --or-update --no-auto-pin "$rem" "$_id" || exit 1
         done
-
-        [ ''${#ref_list[@]} -gt 0 ] || break
-
-        for (( i = 0; i < ''${#ref_list[@]}; i += 10 )); do
-          flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$rem" "''${ref_list[@]:i:10}" || exit 1
-        done
-
-        unset ref_list
 
         for ref in *; do
           [ ! -e "$ref"/commit ] && continue
@@ -163,13 +155,13 @@ let
       for i in ${toString (filter (x: match ":.+\.flatpak$" x != null) cfg.packages)}; do
         _id="$(grep -Eo ':.+\.flatpak$' <<< $i | tail -c+2)"
 
-        flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$_id" || exit 1
+        flatpak ${system-user-switch} install --noninteractive --or-update --no-auto-pin "$_id" || exit 1
       done
       for i in ${toString (filter (x: match ":.+\.flatpakref$" x != null) cfg.packages)}; do
         _remote="$(grep -Eo '^${fremote}:' <<< $i | head -c-2)"
         _id="$(grep -Eo ':.+\.flatpakref$' <<< $i | tail -c+2)"
 
-        flatpak ${system-user-switch} install --noninteractive --no-auto-pin "$_remote" "$_id" || exit 1
+        flatpak ${system-user-switch} install --noninteractive --or-update --no-auto-pin "$_remote" "$_id" || exit 1
       done
     '';
     prune-ostree = ''
