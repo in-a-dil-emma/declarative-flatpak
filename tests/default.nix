@@ -50,6 +50,17 @@ in runNixOSTest {
         ];
       };
     };
+    persist-partial = {
+      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
+      services.flatpak = {
+        flatpakDir = "/target";
+        forceRunOnActivation = true;
+        UNCHECKEDpostEverythingCommand = ''
+          touch /target/repo/thisfileshouldpersist
+          touch /target/thisfileshouldnotpersist
+        '';
+      };
+    };
     persist = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
@@ -79,6 +90,18 @@ in runNixOSTest {
     #installation.succeed("stat /target/exports/bin/org.kde.xwaylandvideobridge")
     #installation.succeed("flatpak run --command=true org.kde.xwaylandvideobridge")
   
+    persist_partial.start(allow_reboot=True)
+    persist_partial.wait_for_unit("multi-user.target")
+    persist_partial.wait_for_file("/target/repo", timeout=120)
+    # Added by POST hook, both should succeed
+    persist_partial.succeed("stat /target/repo/thisfileshouldpersist")
+    persist_partial.succeed("stat /target/thisfileshouldnotpersist")
+    persist_partial.reboot()
+    persist_partial.wait_for_unit("multi-user.target")
+    persist_partial.wait_until_fails("stat /target/.module/new", timeout=60)
+    persist_partial.succeed("stat /target/repo/thisfileshouldpersist")
+    persist_partial.fail("stat /target/thisfileshouldnotpersist")
+
     persist.start(allow_reboot=True)
     persist.wait_for_unit("multi-user.target")
     persist.wait_for_file("/target/repo", timeout=120)
@@ -89,6 +112,6 @@ in runNixOSTest {
     persist.wait_for_unit("multi-user.target")
     persist.wait_until_fails("stat /target/.module/new", timeout=60)
     persist.succeed("stat /target/repo/thisfileshouldpersist")
-    persist.fail("stat /target/thisfileshouldnotpersist")
+    persist.succeed("stat /target/thisfileshouldnotpersist")
   '';
 }
