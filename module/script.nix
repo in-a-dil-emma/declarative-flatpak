@@ -21,7 +21,7 @@ let
       fi
     '';
     setup = ''
-      set -vx
+      ${optionalString cfg.veryVerbose "set -vx"}
       set -eu
       shopt -s extglob nullglob
 

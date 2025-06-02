@@ -5,8 +5,8 @@ let
   ini-types = callPackage ../lib/types/ini.nix {};
 
   inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
+  inherit (lib) mkOption mkEnableOption;
   inherit (pkgs) callPackage;
-  inherit (lib) mkOption;
 
   inherit (flatpak-types) package remote;
   inherit (ini-types) ini;
@@ -169,5 +169,6 @@ in {
       type = str;
       default = "weekly";
     };
+    veryVerbose = mkEnableOption "Verbose logging.";
   };
 }
