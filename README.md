@@ -12,7 +12,7 @@ Flakes
 ```nix
 {
   inputs = {
-    flatpaks.url = "github:in-a-dil-emma/declarative-flatpaks/stable-v3";
+    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/stable-v3";
   };
 }
 ```
