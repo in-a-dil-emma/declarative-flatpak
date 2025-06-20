@@ -12,7 +12,7 @@ Flakes
 ```nix
 {
   inputs = {
-    flatpaks.url = "github:in-a-dil-emma/declarative-flatpaks/stable-v3";
+    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/stable-v3";
   };
 }
 ```
@@ -25,7 +25,7 @@ npins
 </summary>
 
 ```console
-$ npins add github --name flatpaks in-a-dil-emma declarative-flatpaks -b stable-v3
+$ npins add github --name flatpaks in-a-dil-emma declarative-flatpak -b stable-v3
 ```
 
 </details>
