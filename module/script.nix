@@ -70,7 +70,7 @@ let
 
       rm -rf "$NEW_FLATPAK_INSTALL"
 
-      mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides
+      mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides "$NEW_FLATPAK_INSTALL"/db
     '';
     recycle-repo = ''
       if [ -d "$DATA_DIR"/repo-save ]; then
