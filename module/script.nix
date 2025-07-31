@@ -208,10 +208,12 @@ let
       done
       popd
       rm "$CURRENT_FLATPAK_DIR"/repo/dirty
-
+    '';
+    post-cleanup = ''
       echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
       rm -rf "$NEW_FLATPAK_INSTALL"
+      trap - ERR
     '';
   };
 in {
@@ -236,6 +238,7 @@ in {
       script.overrides
       script.exports
       script.switch
+      script.post-cleanup
       cfg.UNCHECKEDpostEverythingCommand
     ]);
   };
