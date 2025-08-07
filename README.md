@@ -1,5 +1,7 @@
 # Declarative flatpaks
 
+Declaratively manage Flatpak with Nix
+
 ## Setup
 
 ### Inputs
