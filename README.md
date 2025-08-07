@@ -235,3 +235,7 @@ VALUE:
 
 > [!NOTE]
 > Your setup must be able to hold the size of your flatpak installation at least twice.
+
+## See also
+
+https://github.com/gmodena/nix-flatpak
