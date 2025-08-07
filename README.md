@@ -1,5 +1,7 @@
 # Declarative flatpaks
 
+Declaratively manage Flatpak installations in NixOS and your $HOME
+
 ## Setup
 
 ### Inputs
