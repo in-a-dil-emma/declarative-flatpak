@@ -132,7 +132,7 @@ You will get notified in time when a stable branch gets obsoleted.
 
 <ins>list element</ins> is a string, matching one of the following patterns:
 
-- `{remote}:{type}/{ref}/[{arch}]/{branch}[:{commit}]`
+- `{remote}:{type}/{ref}[/{arch}]/{branch}[:{commit}]`
 - `{remote}:{path}.flatpakref`
 - `:{path}.flatpak`
 
