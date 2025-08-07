@@ -16,6 +16,7 @@ Also try https://github.com/gmodena/nix-flatpak
 Flakes
 </summary>
 
+`flake.nix`
 ```nix
 {
   inputs = {
@@ -31,6 +32,7 @@ Flakes
 npins
 </summary>
 
+console
 ```console
 $ npins add github --name flatpaks in-a-dil-emma declarative-flatpak
 ```
@@ -44,6 +46,7 @@ $ npins add github --name flatpaks in-a-dil-emma declarative-flatpak
 Flakes
 </summary>
 
+`configuration.nix`
 ```nix
 { flatpaks, ... }: {
   imports = [
@@ -59,6 +62,7 @@ Flakes
 npins
 </summary>
 
+`configuration.nix`
 ```nix
 { flatpaks, ... }: {
   imports = [
@@ -76,6 +80,7 @@ npins
 Flakes
 </summary>
 
+`home.nix`
 ```nix
 { flatpaks, ... }: {
   imports = [
@@ -91,6 +96,7 @@ Flakes
 npins
 </summary>
 
+`home.nix`
 ```nix
 { flatpaks, ... }: {
   imports = [
