@@ -14,18 +14,6 @@ in
     ./service.nix
   ];
 
-  # is this really necessary?
-  config.home.activation = mkIf cfg.enable {
-    start-service = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      export PATH=${makeBinPath ([ systemd ])}:$PATH
-
-      $DRY_RUN_CMD systemctl is-system-running -q && \
-        systemctl --user daemon-reload || true
-      $DRY_RUN_CMD systemctl is-system-running -q && \
-        systemctl --user enable --now manage-user-flatpaks || true
-    '';
-  };
-
   # is this necessary too?
   config.xdg.enable = true;
 }
