@@ -233,6 +233,8 @@ VALUE:
 
 </details>
 
+Please consult [the module options.nix](module/options.nix) for more information.
+
 ---
 
 > [!NOTE]

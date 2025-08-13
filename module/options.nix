@@ -5,6 +5,7 @@ let
   ini-types = callPackage ../lib/types/ini.nix {};
 
   inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
+  inherit (lib.options) literalMD literalExpression;
   inherit (lib) mkOption mkEnableOption;
   inherit (pkgs) callPackage;
 
@@ -15,7 +16,13 @@ in {
     packages = mkOption {
       type = listOf package;
       default = [];
-      example = [ "flathub:app/org.kde.index//stable" "flathub-beta:app/org.kde.kdenlive/x86_64/stable" ];
+      example = literalExpression ''
+        [
+          "flathub:app/org.kde.index//stable"
+          "flathub-beta:app/org.kde.kdenlive/x86_64/stable"
+          "kustom-source:app/org.kde.krita/x86_64/stable:1234567890123456789012345678901234567890123456789012345678901234"
+        ]
+      '';
       description = ''
         Which packages to install.
 
@@ -26,7 +33,7 @@ in {
     flatpakDir = mkOption {
       type = nullOr path;
       default = null;
-      description = ''
+      description = literalMD ''
         Path where to link the flatpak file to.
 
         By default will be:
@@ -62,16 +69,16 @@ in {
     UNCHECKEDpostEverythingCommand = mkOption {
       type = nullOr str;
       default = "";
-      description = ''
+      description = literalMD ''
         Which commands to run after the script completed execution.
 
-        The error status of this command will NOT be checked. Errors that occur will NOT prevent the generation from being activated!
+        The error status of this command will **not** be checked. Errors that occur will **not** cause the transaction to fail!
       '';
     };
     remotes = mkOption {
       type = remote;
       default = {};
-      example = ''
+      example = literalExpression ''
         services.flatpak.remotes = {
           "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
           "flathub-beta" = "/path/flathub-beta.flatpakrepo";
@@ -120,7 +127,7 @@ in {
         };
       }));
       default = {};
-      example = ''
+      example = literalExpression ''
         services.flatpak.overrides = {
           "global" = {
             filesystems = [
