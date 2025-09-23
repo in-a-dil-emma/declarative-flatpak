@@ -18,6 +18,19 @@
       "name": "nixpkgs-unstable",
       "url": "https://releases.nixos.org/nixpkgs/nixpkgs-25.11pre836767.e44b8dc0882d/nixexprs.tar.xz",
       "hash": "1ps0dkn8rsajxg75xcpwq49idkw0mk7praim0bfvr5352cgggrvs"
+    },
+    "treefmt-nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "numtide",
+        "repo": "treefmt-nix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "128222dc911b8e2e18939537bed1762b7f3a04aa",
+      "url": "https://github.com/numtide/treefmt-nix/archive/128222dc911b8e2e18939537bed1762b7f3a04aa.tar.gz",
+      "hash": "1p81chik0sb8aligng579m4h0klnndxv76z0p4gyhr4g3s9cydpw"
     }
   },
   "version": 5
