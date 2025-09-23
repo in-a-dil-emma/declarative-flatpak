@@ -9,7 +9,7 @@ in {
   options.services.flatpak.internal = {
     targetDir = mkOption {
       internal = true;
-      apply = value: fallback cfg.flatpakDir value;
+      apply = fallback cfg.flatpakDir;
     };
     mainScript = {
       activation = mkOption {

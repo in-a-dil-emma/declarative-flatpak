@@ -3,6 +3,7 @@
 let
   inherit (pkgs) curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
   inherit (builtins) concatStringsSep map filter toJSON match attrValues mapAttrs attrNames;
+  inherit (cfg.internal) targetDir mainScript;
   inherit (lib) makeBinPath optionalString;
 
   inherit (import ../lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
@@ -32,7 +33,7 @@ let
       CURR_BOOTID=$(journalctl --list-boots --no-pager | grep -E '^ +0' | awk '{print$2}') || \
         CURR_BOOTID=1
 
-      CURRENT_FLATPAK_DIR="${cfg.internal.targetDir}"
+      CURRENT_FLATPAK_DIR="${targetDir}"
       ${optionalString (cfg.flatpakDir != null) ''
         CURRENT_FLATPAK_DIR="${cfg.flatpakDir}"
       ''}
@@ -221,7 +222,7 @@ in {
     activation = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
       script.setup
       script.config-diff
-      config.services.flatpak.internal.mainScript.auto
+      mainScript.auto
     ]);
     auto = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
       script.setup
