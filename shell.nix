@@ -1,10 +1,18 @@
 let
   inputs = import ./npins;
-  pkgs = import inputs.nixpkgs {};
+  pkgs = import inputs.nixpkgs { };
   treefmt = import inputs.treefmt-nix;
 
-  inherit (pkgs) mkShellNoCC npins ncurses ostree gawk jq;
-in mkShellNoCC {
+  inherit (pkgs)
+    mkShellNoCC
+    npins
+    ncurses
+    ostree
+    gawk
+    jq
+    ;
+in
+mkShellNoCC {
   packages = [
     (treefmt.mkWrapper pkgs ./lib/treefmt.nix)
     ncurses
@@ -13,5 +21,5 @@ in mkShellNoCC {
     gawk
     jq
   ];
-  NIX_PATH="nixpkgs=${inputs.nixpkgs}";
+  NIX_PATH = "nixpkgs=${inputs.nixpkgs}";
 }

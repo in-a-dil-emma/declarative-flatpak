@@ -1,11 +1,15 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   virtualisation = {
     graphics = false;
     cores = 4;
     memorySize = 1024 * 4;
     diskSize = 1024 * 64;
     qemu = {
-      consoles = [ "tty0" "hvc0" ];
+      consoles = [
+        "tty0"
+        "hvc0"
+      ];
       options = [
         "-serial null"
         "-device virtio-serial"
@@ -18,7 +22,8 @@
 
   services.flatpak = {
     enable = true;
-    packages = [ # comment these out at random
+    packages = [
+      # comment these out at random
       "flathub:runtime/org.freedesktop.Platform.VulkanLayer.MangoHud//21.08:9ee91f5c7944516169bb7a327d81ac7b08b149b3cd238b7a11a61bc1abe28ba9"
       #"flathub-beta:runtime/com.valvesoftware.Steam.Utility.vkBasalt//beta" # this runtime is cursed for some reason
       "flathub:app/org.kde.index//stable"
@@ -75,7 +80,9 @@
   };
 
   environment.systemPackages = with pkgs; [
-    tmux ncdu xdg-utils
+    tmux
+    ncdu
+    xdg-utils
   ];
 
   networking.networkmanager.enable = true;

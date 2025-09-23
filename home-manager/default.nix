@@ -1,11 +1,9 @@
-{ config, lib, pkgs, ... }:
-
-let
-  inherit (pkgs) systemd;
-  inherit (lib) mkIf makeBinPath;
-  
-  cfg = config.services.flatpak;
-in 
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [

@@ -1,6 +1,8 @@
 {
-  outputs = { self }: {
-    nixosModule = ./nixos;
-    homeModule = ./home-manager;
-  };
+  outputs =
+    { self }:
+    {
+      nixosModule = ./nixos;
+      homeModule = ./home-manager;
+    };
 }

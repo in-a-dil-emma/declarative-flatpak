@@ -1,17 +1,62 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  inherit (pkgs) curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils writeShellScript writeText;
-  inherit (builtins) concatStringsSep map filter toJSON match attrValues mapAttrs attrNames;
+  inherit (pkgs)
+    curl
+    coreutils
+    util-linux
+    gnugrep
+    flatpak
+    gawk
+    rsync
+    ostree
+    systemd
+    findutils
+    gnused
+    diffutils
+    writeShellScript
+    writeText
+    ;
+  inherit (builtins)
+    concatStringsSep
+    map
+    filter
+    toJSON
+    match
+    attrValues
+    mapAttrs
+    attrNames
+    ;
   inherit (cfg.internal) targetDir mainScript;
   inherit (lib) makeBinPath optionalString;
 
-  inherit (import ../lib/regexes.nix) fcommit fref ffile fremote ftype farch fbranch;
+  inherit (import ../lib/regexes.nix)
+    fcommit
+    fref
+    ffile
+    fremote
+    ftype
+    farch
+    fbranch
+    ;
 
   cfg = config.services.flatpak;
   is-hm = config ? home && lib ? hm;
   filecfg = writeText "flatpak-gen-config" (toJSON {
-    inherit (cfg) overrides packages remotes preRemotesCommand preInstallCommand preSwitchCommand UNCHECKEDpostEverythingCommand;
+    inherit (cfg)
+      overrides
+      packages
+      remotes
+      preRemotesCommand
+      preInstallCommand
+      preSwitchCommand
+      UNCHECKEDpostEverythingCommand
+      ;
   });
   system-user-switch = if is-hm then "--user" else "--system";
   script = {
@@ -26,7 +71,22 @@ let
       set -eu
       shopt -s extglob nullglob
 
-      PATH="${makeBinPath [ curl coreutils util-linux gnugrep flatpak gawk rsync ostree systemd findutils gnused diffutils ]}"
+      PATH="${
+        makeBinPath [
+          curl
+          coreutils
+          util-linux
+          gnugrep
+          flatpak
+          gawk
+          rsync
+          ostree
+          systemd
+          findutils
+          gnused
+          diffutils
+        ]
+      }"
 
       LANG=C
       MODULE_DIR_INFIX=".module"
@@ -99,10 +159,14 @@ let
         "$NEW_FLATPAK_INSTALL"/repo/extensions
       rm "$NEW_FLATPAK_INSTALL"/repo/dirty
     '';
-    add-remotes = toString (attrValues (mapAttrs (name: value: ''
-      echo "Adding remote ${name} with URL ${value}"
-      flatpak ${system-user-switch} remote-add --if-not-exists "${name}" "${value}" || exit 1
-    '') cfg.remotes));
+    add-remotes = toString (
+      attrValues (
+        mapAttrs (name: value: ''
+          echo "Adding remote ${name} with URL ${value}"
+          flatpak ${system-user-switch} remote-add --if-not-exists "${name}" "${value}" || exit 1
+        '') cfg.remotes
+      )
+    );
     prep-install = ''
       counter=0
 
@@ -171,9 +235,11 @@ let
     '';
     overrides = ''
       echo "Installing overrides"
-      ${concatStringsSep "\n" (map (ref: ''
-        cat ${cfg.overrides.${ref}.source} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
-      '') (attrNames cfg.overrides))}
+      ${concatStringsSep "\n" (
+        map (ref: ''
+          cat ${cfg.overrides.${ref}.source} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
+        '') (attrNames cfg.overrides)
+      )}
     '';
     exports = optionalString (cfg.flatpakDir != null) ''
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
@@ -217,30 +283,35 @@ let
       trap - ERR
     '';
   };
-in {
+in
+{
   config.services.flatpak.internal.mainScript = {
-    activation = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
-      script.setup
-      script.config-diff
-      mainScript.auto
-    ]);
-    auto = writeShellScript "setup-flatpaks" (concatStringsSep "\n" [
-      script.setup
-      script.dirs
-      script.recycle-repo
-      cfg.preRemotesCommand
-      script.add-remotes
-      cfg.preInstallCommand
-      script.prep-install
-      script.install-remote
-      script.install-local
-      cfg.preSwitchCommand
-      script.prune-ostree
-      script.overrides
-      script.exports
-      script.switch
-      script.post-cleanup
-      cfg.UNCHECKEDpostEverythingCommand
-    ]);
+    activation = writeShellScript "setup-flatpaks" (
+      concatStringsSep "\n" [
+        script.setup
+        script.config-diff
+        mainScript.auto
+      ]
+    );
+    auto = writeShellScript "setup-flatpaks" (
+      concatStringsSep "\n" [
+        script.setup
+        script.dirs
+        script.recycle-repo
+        cfg.preRemotesCommand
+        script.add-remotes
+        cfg.preInstallCommand
+        script.prep-install
+        script.install-remote
+        script.install-local
+        cfg.preSwitchCommand
+        script.prune-ostree
+        script.overrides
+        script.exports
+        script.switch
+        script.post-cleanup
+        cfg.UNCHECKEDpostEverythingCommand
+      ]
+    );
   };
 }

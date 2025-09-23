@@ -1,21 +1,31 @@
 { pkgs, lib, ... }:
 
 let
-  flatpak-types = callPackage ../lib/types/flatpak.nix {};
-  ini-types = callPackage ../lib/types/ini.nix {};
+  flatpak-types = callPackage ../lib/types/flatpak.nix { };
+  ini-types = callPackage ../lib/types/ini.nix { };
 
-  inherit (lib.types) listOf bool nullOr attrsOf path str submodule anything;
+  inherit (lib.types)
+    listOf
+    bool
+    nullOr
+    attrsOf
+    path
+    str
+    submodule
+    anything
+    ;
   inherit (lib.options) literalMD literalExpression;
   inherit (lib) mkOption mkEnableOption;
   inherit (pkgs) callPackage;
 
   inherit (flatpak-types) package remote;
   inherit (ini-types) ini;
-in {
+in
+{
   options.services.flatpak = {
     packages = mkOption {
       type = listOf package;
-      default = [];
+      default = [ ];
       example = literalExpression ''
         [
           "flathub:app/org.kde.index//stable"
@@ -77,7 +87,7 @@ in {
     };
     remotes = mkOption {
       type = remote;
-      default = {};
+      default = { };
       example = literalExpression ''
         services.flatpak.remotes = {
           "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
@@ -89,44 +99,49 @@ in {
       '';
     };
     overrides = mkOption {
-      type = attrsOf (submodule ({ config, ... }: {
-        options = {
-          filesystems = mkOption {
-            type = nullOr (listOf str);
-            default = null;
-          };
-          sockets = mkOption {
-            type = nullOr (listOf str);
-            default = null;
-          };
-          environment = mkOption {
-            type = nullOr (attrsOf anything);
-            default = null;
-          };
+      type = attrsOf (
+        submodule (
+          { config, ... }:
+          {
+            options = {
+              filesystems = mkOption {
+                type = nullOr (listOf str);
+                default = null;
+              };
+              sockets = mkOption {
+                type = nullOr (listOf str);
+                default = null;
+              };
+              environment = mkOption {
+                type = nullOr (attrsOf anything);
+                default = null;
+              };
 
-          metadata = mkOption {
-            type = anything;
-            internal = true;
-          };
-          source = mkOption {
-            type = path;
-            internal = true;
-          };
-        };
-        # Credit: https://github.com/PJungkamp #23 #25
-        config = {
-          metadata = {
-            Context = {
-              filesystems = if config.filesystems != null then config.filesystems else [];
-              sockets = if config.sockets != null then config.sockets else [];
+              metadata = mkOption {
+                type = anything;
+                internal = true;
+              };
+              source = mkOption {
+                type = path;
+                internal = true;
+              };
             };
-            Environment = if config.environment != null then config.environment else {};
-          };
+            # Credit: https://github.com/PJungkamp #23 #25
+            config = {
+              metadata = {
+                Context = {
+                  filesystems = if config.filesystems != null then config.filesystems else [ ];
+                  sockets = if config.sockets != null then config.sockets else [ ];
+                };
+                Environment = if config.environment != null then config.environment else { };
+              };
 
-          source = ini.generate "flatpak-override-${config._module.args.name}" config.metadata;
-        };
-      }));
-      default = {};
+              source = ini.generate "flatpak-override-${config._module.args.name}" config.metadata;
+            };
+          }
+        )
+      );
+      default = { };
       example = literalExpression ''
         services.flatpak.overrides = {
           "global" = {

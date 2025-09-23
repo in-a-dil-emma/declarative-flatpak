@@ -1,8 +1,9 @@
 let
   inputs = import ../npins;
-  pkgs = import inputs.nixpkgs {};
+  pkgs = import inputs.nixpkgs { };
   inherit (pkgs.testers) runNixOSTest;
-in runNixOSTest {
+in
+runNixOSTest {
   name = "NixOS test";
 
   defaults = {
@@ -33,9 +34,9 @@ in runNixOSTest {
     };
     nothing = {
       services.flatpak = {
-        remotes = {};
-        packages = [];
-        overrides = {};
+        remotes = { };
+        packages = [ ];
+        overrides = { };
       };
     };
     installation = {
@@ -89,7 +90,7 @@ in runNixOSTest {
     #installation.wait_until_succeeds("stat /target/exports", timeout=120)
     #installation.succeed("stat /target/exports/bin/org.kde.xwaylandvideobridge")
     #installation.succeed("flatpak run --command=true org.kde.xwaylandvideobridge")
-  
+
     persist_partial.start(allow_reboot=True)
     persist_partial.wait_for_unit("multi-user.target")
     persist_partial.wait_for_file("/target/repo", timeout=120)

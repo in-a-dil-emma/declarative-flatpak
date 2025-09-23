@@ -5,7 +5,8 @@ let
 
   cfg = config.services.flatpak;
   fallback = x: y: if x == null then y else x;
-in {
+in
+{
   options.services.flatpak.internal = {
     targetDir = mkOption {
       internal = true;
