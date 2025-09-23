@@ -19,7 +19,7 @@ Flakes
 ```nix
 {
   inputs = {
-    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/stable-v3";
+    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/latest";
   };
 }
 ```
@@ -32,7 +32,7 @@ npins
 </summary>
 
 ```console
-$ npins add github --name flatpaks in-a-dil-emma declarative-flatpak -b stable-v3
+$ npins add github --name flatpaks in-a-dil-emma declarative-flatpak
 ```
 
 </details>
@@ -103,18 +103,7 @@ npins
 
 ## Versioning
 
-<details open>
-
-You will get notified in time when a stable branch gets obsoleted.
-
-| BRANCH    | DESCRIPTION                                         | REPORT BUGS? |
-|-----------|-----------------------------------------------------|--------------|
-| stable-v1 | First working release.                              | NO           |
-| stable-v2 | Added pseudo-generations.                           | NO           |
-| stable-v3 | v2, but more resilient, faster and space efficient. | YES          |
-| dev       | Development branch.                                 | YES          |
-
-</details>
+Releases are done through git tags.
 
 ## Configuring
 
