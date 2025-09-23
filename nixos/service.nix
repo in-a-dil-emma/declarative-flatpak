@@ -28,7 +28,10 @@ let
         StartLimitBurst = 3;
       };
       serviceConfig = {
-        ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
+        ExecPaths = [
+          "/nix/store"
+          cfg.internal.targetDir
+        ];
         ReadWritePaths = [ cfg.internal.targetDir ];
         ProtectSystem = "strict";
         Restart = "on-failure";

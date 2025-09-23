@@ -1,7 +1,12 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  ini-types = callPackage ../lib/types/ini.nix {};
+  ini-types = callPackage ../lib/types/ini.nix { };
 
   inherit (lib) mkOption mapAttrs pipe;
   inherit (pkgs) callPackage;

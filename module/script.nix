@@ -236,9 +236,11 @@ let
     '';
     overrides = ''
       echo "Installing overrides"
-      ${concatStringsSep "\n" (map (ref: ''
-        cat ${overrideFiles.${ref}} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
-      '') (attrNames cfg.overrides))}
+      ${concatStringsSep "\n" (
+        map (ref: ''
+          cat ${overrideFiles.${ref}} >"$NEW_FLATPAK_INSTALL"/overrides/"${ref}"
+        '') (attrNames cfg.overrides)
+      )}
     '';
     exports = optionalString (cfg.flatpakDir != null) ''
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
