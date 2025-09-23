@@ -16,17 +16,18 @@ let
       Unit = {
         ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
         RequiresMountsFor = [ cfg.internal.targetDir ];
+        Description = "Manage flatpaks";
         StartLimitIntervalSec = 60;
         StartLimitBurst = 3;
       };
       Service = {
-        #TemporaryFileSystem = [ config.home.homeDirectory config.xdg.cacheHome ];
-        #ReadWritePaths = [ "/run/user" cfg.internal.targetDir ];
-        #ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
+        ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
+        ReadWritePaths = [ cfg.internal.targetDir ];
+        ProtectHome = "read-only";
+        ProtectSystem = "strict";
         Restart = "on-failure";
-        #ReadOnlyPaths = "/";
-        #PrivateTmp = true;
-        #NoExecPaths = "/";
+        NoExecPaths = [ "/" ];
+        PrivateTmp = true;
       };
     } prev;
 in
@@ -41,7 +42,6 @@ in
         {
           Unit = {
             Before = "manage-flatpaks-auto.service";
-            Description = "Manage flatpaks";
           };
           Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
         }
@@ -55,7 +55,6 @@ in
         {
           Unit = {
             After = "manage-flatpaks-activation.service";
-            Description = "Manage flatpaks";
           };
           Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
         }

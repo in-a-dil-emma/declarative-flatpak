@@ -23,18 +23,18 @@ let
       unitConfig = {
         ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
         RequiresMountsFor = [ cfg.internal.targetDir ];
+        Description = "Manage flatpaks";
         StartLimitIntervalSec = 60;
         StartLimitBurst = 3;
       };
       serviceConfig = {
-        #ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
-        #ReadWritePaths = [ cfg.internal.targetDir ];
-        #TemporaryFileSystem = [ "/root" ];
+        ExecPaths = [ "/nix/store" cfg.internal.targetDir ];
+        ReadWritePaths = [ cfg.internal.targetDir ];
+        ProtectSystem = "strict";
         Restart = "on-failure";
-        #ProtectHome = "tmpfs";
-        #ReadOnlyPaths = "/";
-        #PrivateTmp = true;
-        #NoExecPaths = "/";
+        NoExecPaths = [ "/" ];
+        ProtectHome = true;
+        PrivateTmp = true;
       };
     } prev;
 in
@@ -49,7 +49,6 @@ in
         {
           unitConfig = {
             Before = "manage-flatpaks-auto.service";
-            Description = "Manage flatpaks";
           };
           serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
         }
@@ -63,7 +62,6 @@ in
         {
           unitConfig = {
             After = "manage-flatpaks-activation.service";
-            Description = "Manage flatpaks";
           };
           serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
         }
