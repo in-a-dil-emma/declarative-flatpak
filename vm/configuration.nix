@@ -40,14 +40,14 @@
     };
     overrides = {
       "org.mozilla.firefox" = {
-        filesystems = [
+        Context.filesystems = [
           "xdg-home/foobar"
           "!host"
         ];
-        environment = {
+        Environment = {
           "MOZ_ENABLE_WAYLAND" = 1;
         };
-        sockets = [
+        Context.sockets = [
           "!x11"
           "fallback-x11"
         ];
