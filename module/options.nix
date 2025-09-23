@@ -2,7 +2,6 @@
 
 let
   flatpak-types = callPackage ../lib/types/flatpak.nix { };
-  ini-types = callPackage ../lib/types/ini.nix { };
 
   inherit (lib.types)
     listOf
@@ -11,15 +10,13 @@ let
     attrsOf
     path
     str
-    submodule
     anything
     ;
   inherit (lib.options) literalMD literalExpression;
-  inherit (lib) mkOption mkEnableOption;
+  inherit (lib) mkOption mkEnableOption pipe;
   inherit (pkgs) callPackage;
 
   inherit (flatpak-types) package remote;
-  inherit (ini-types) ini;
 in
 {
   options.services.flatpak = {
@@ -99,48 +96,10 @@ in
       '';
     };
     overrides = mkOption {
-      type = attrsOf (
-        submodule (
-          { config, ... }:
-          {
-            options = {
-              filesystems = mkOption {
-                type = nullOr (listOf str);
-                default = null;
-              };
-              sockets = mkOption {
-                type = nullOr (listOf str);
-                default = null;
-              };
-              environment = mkOption {
-                type = nullOr (attrsOf anything);
-                default = null;
-              };
-
-              metadata = mkOption {
-                type = anything;
-                internal = true;
-              };
-              source = mkOption {
-                type = path;
-                internal = true;
-              };
-            };
-            # Credit: https://github.com/PJungkamp #23 #25
-            config = {
-              metadata = {
-                Context = {
-                  filesystems = if config.filesystems != null then config.filesystems else [ ];
-                  sockets = if config.sockets != null then config.sockets else [ ];
-                };
-                Environment = if config.environment != null then config.environment else { };
-              };
-
-              source = ini.generate "flatpak-override-${config._module.args.name}" config.metadata;
-            };
-          }
-        )
-      );
+      type = pipe anything [
+        attrsOf
+        attrsOf
+      ];
       default = { };
       example = literalExpression ''
         services.flatpak.overrides = {
