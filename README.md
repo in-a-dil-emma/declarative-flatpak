@@ -19,7 +19,7 @@ Flakes
 ```nix
 {
   inputs = {
-    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/latest";
+    flatpaks.url = "github:in-a-dil-emma/declarative-flatpak/v3.1.0";
   };
 }
 ```
