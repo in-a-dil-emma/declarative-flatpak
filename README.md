@@ -2,6 +2,11 @@
 
 Declaratively manage Flatpak installations in NixOS and your $HOME
 
+> [!CAUTION]
+> Your disk setup must be able to hold the size of your flatpak installation at least twice.
+
+Also try https://github.com/gmodena/nix-flatpak
+
 ## Setup
 
 ### Inputs
@@ -21,7 +26,7 @@ Flakes
 
 </details>
 
-<details>
+<details open>
 <summary>
 npins
 </summary>
@@ -49,7 +54,7 @@ Flakes
 
 </details>
 
-<details>
+<details open>
 <summary>
 npins
 </summary>
@@ -233,13 +238,5 @@ VALUE:
 
 </details>
 
-Please consult [the module options.nix](module/options.nix) for more information.
+Please consult [the module options](module/options.nix) for more information.
 
----
-
-> [!NOTE]
-> Your setup must be able to hold the size of your flatpak installation at least twice.
-
-## See also
-
-https://github.com/gmodena/nix-flatpak
