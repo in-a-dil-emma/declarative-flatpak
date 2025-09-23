@@ -85,7 +85,10 @@
     xdg-utils
   ];
 
-  networking.networkmanager.enable = true;
+  networking = {
+    hostName = "test-vm";
+    networkmanager.enable = true;
+  };
 
   programs.zsh = {
     enable = true;
