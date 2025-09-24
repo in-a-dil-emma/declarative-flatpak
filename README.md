@@ -47,7 +47,7 @@ Flakes
 ```nix
 { flatpaks, ... }: {
   imports = [
-    flatpaks.nixosModule
+    flatpaks.nixosModules.default
   ];
 }
 ```
@@ -79,7 +79,7 @@ Flakes
 ```nix
 { flatpaks, ... }: {
   imports = [
-    flatpaks.homeModule
+    flatpaks.homeModules.default
   ];
 }
 ```
