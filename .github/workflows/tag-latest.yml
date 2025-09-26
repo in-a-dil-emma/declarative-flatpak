@@ -1,0 +1,41 @@
+# https://github.com/gmodena/nix-flatpak/raw/62f636b87ef6050760a8cb325cadb90674d1e23e/.github/workflows/tag-latest.yml
+# :)
+name: "Alias tag as latest"
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      # I intentionally ignore every tag that doesn't follow this pattern
+  workflow_dispatch:
+jobs:
+  update-latest-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "write"
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v5
+
+      # https://github.com/actions/checkout/issues/1471#issuecomment-1755560284
+    - name: Fetch tags
+      run: git fetch --prune --unshallow --tags
+
+    - name: Get the latest version tag
+      id: get-latest-tag
+      run: |
+        latest_tag=$(git tag -l | grep -E "v[0-9]+\.[0-9]+\.[0-9]+" | sort -rV | head -n 1)
+        echo "Latest tag: $latest_tag"
+        echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+    - name: Push the 'latest' tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        if git rev-parse -q --verify refs/tags/latest; then
+          git tag -d latest
+        fi
+
+        git tag latest "$latest_tag"
+
+        git push --force origin latest
+
