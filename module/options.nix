@@ -99,6 +99,7 @@ in
       type = pipe anything [
         attrsOf
         attrsOf
+        attrsOf
       ];
       default = { };
       example = literalExpression ''
