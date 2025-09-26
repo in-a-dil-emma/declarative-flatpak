@@ -18,7 +18,7 @@ jobs:
 
       # https://github.com/actions/checkout/issues/1471#issuecomment-1755560284
     - name: Fetch tags
-      run: git fetch --prune --unshallow --tags
+      run: git fetch --prune --unshallow --tags --force
 
     - name: Get the latest version tag
       id: get-latest-tag
