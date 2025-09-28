@@ -21,4 +21,5 @@ in
 mkShellNoCC {
   name = "vm";
   shellHook = "exec ${getExe vm.config.system.build.vm}";
+  passthru.config = vm.config;
 }
