@@ -45,6 +45,7 @@
           "!host"
         ];
         Environment = {
+          "PATHLIKE_TEST" = [ "/etc" "a" 123 ];
           "MOZ_ENABLE_WAYLAND" = 1;
         };
         Context.sockets = [
