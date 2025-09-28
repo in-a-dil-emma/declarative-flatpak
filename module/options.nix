@@ -3,14 +3,19 @@
 let
   flatpak-types = callPackage ../lib/types/flatpak.nix { };
 
+  overrideValue' = oneOf [ str number path attrs ];
+  overrideValue = either (listOf overrideValue') overrideValue';
   inherit (lib.types)
-    listOf
-    bool
-    nullOr
     attrsOf
+    number
+    either
+    listOf
+    nullOr
+    attrs
+    oneOf
+    bool
     path
     str
-    anything
     ;
   inherit (lib.options) literalMD literalExpression;
   inherit (lib) mkOption mkEnableOption pipe;
@@ -96,7 +101,7 @@ in
       '';
     };
     overrides = mkOption {
-      type = pipe anything [
+      type = pipe overrideValue [
         attrsOf
         attrsOf
         attrsOf
