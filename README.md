@@ -110,16 +110,16 @@ Releases are done through git tags.
 <details>
 <summary>services → <b>flatpak</b></summary>
 
-| OPTION                         | TYPE           | DEFAULT |
-|--------------------------------|----------------|---------|
-| enable                         | boolean        | false   |
-| preRemotesCommand              | string or null | null    |
-| preInstallCommand              | string or null | null    |
-| preSwitchCommand               | string or null | null    |
-| UNCHECKEDpostEverythingCommand | string or null | null    |
-| flatpakDir                     | path or null   | depends |
-| forceRunOnActivation           | boolean        | false   |
-| onCalendar                     | systemd time   | weekly  |
+| OPTION                         | TYPE           | DEFAULT                                                                |
+|--------------------------------|----------------|------------------------------------------------------------------------|
+| enable                         | boolean        | false                                                                  |
+| preRemotesCommand              | string or null | null                                                                   |
+| preInstallCommand              | string or null | null                                                                   |
+| preSwitchCommand               | string or null | null                                                                   |
+| UNCHECKEDpostEverythingCommand | string or null | null                                                                   |
+| flatpakDir                     | path or null   | NixOS: `/var/lib/flatpak` ;<br>Home-Manager: `${XDG\_DATA\_HOME}/flatpak` |
+| forceRunOnActivation           | boolean        | false                                                                  |
+| onCalendar                     | systemd time   | weekly                                                                 |
 
 </details>
 
@@ -170,16 +170,6 @@ VALUE:
 | filesystems | list of strings | paths prefixed with ! will deny access   |
 | sockets     | list of strings | sockets prefixed with ! will deny access |
 | environment | key-value pair  |                                          |
-
-</details>
-
-<details>
-<summary>Special case: services → flatpak → <b>flatpakDir</b></summary>
-
-| MODULE TYPE  | DEFAULT                    |
-|--------------|----------------------------|
-| NixOS        | /var/lib/flatpak           |
-| Home Manager | ${XDG\_DATA\_HOME}/flatpak |
 
 </details>
 
