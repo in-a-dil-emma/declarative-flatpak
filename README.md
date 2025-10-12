@@ -189,7 +189,7 @@ See https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-me
     overrides = {
       # note: "global" is a flatpak thing
       # if you ever ran "flatpak override" without specifying a ref you will know
-      "global" = {
+      "global".Context = {
         filesystems = [
           "home"
         ];
@@ -199,10 +199,10 @@ See https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-me
         ];
       };
       "org.mozilla.Firefox" = {
-        environment = {
+        Environment = {
           "MOZ_ENABLE_WAYLAND" = 1;
         };
-        sockets = [
+        Context.sockets = [
           "!wayland"
           "!fallback-x11"
           "x11"
