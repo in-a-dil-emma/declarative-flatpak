@@ -3,7 +3,12 @@
 let
   flatpak-types = callPackage ../lib/types/flatpak.nix { };
 
-  overrideValue' = oneOf [ str number path attrs ];
+  overrideValue' = oneOf [
+    str
+    number
+    path
+    attrs
+  ];
   overrideValue = either (listOf overrideValue') overrideValue';
   inherit (lib.types)
     attrsOf
