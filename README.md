@@ -201,7 +201,9 @@ VALUE:
       "flathub:/root/testflatpak.flatpakref"
     ];
     overrides = {
-      global = {
+      # note: "global" is a flatpak thing
+      # if you ever ran "flatpak override" without specifying a ref you will know
+      "global" = {
         filesystems = [
           "home"
         ];
