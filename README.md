@@ -165,11 +165,7 @@ Expressions in `{curly brackets}` must be substituted.
 
 VALUE:
 
-| OPTION      | TYPE            | DESCRIPTION                              |
-|-------------|-----------------|------------------------------------------|
-| filesystems | list of strings | paths prefixed with ! will deny access   |
-| sockets     | list of strings | sockets prefixed with ! will deny access |
-| environment | key-value pair  |                                          |
+See https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-metadata
 
 </details>
 
