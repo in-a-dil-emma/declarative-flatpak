@@ -159,13 +159,9 @@ Expressions in `{curly brackets}` must be substituted.
 <details>
 <summary>... → overrides → <b><ins>key-value pair</ins></b></summary>
 
-| KEY      |
-|----------|
-| Filename |
-
-VALUE:
-
-See https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-metadata
+| KEY      | VALUE                                                                                  |
+|----------|----------------------------------------------------------------------------------------|
+| Filename | See https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-metadata |
 
 </details>
 
