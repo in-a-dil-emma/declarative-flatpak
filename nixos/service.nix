@@ -1,5 +1,8 @@
-{ config, lib, ... }:
-
+{
+  config,
+  lib,
+  ...
+}:
 let
   inherit (lib) mkIf pipe recursiveUpdate;
   cfg = config.services.flatpak;
@@ -41,12 +44,16 @@ let
       };
     } prev;
 in
-
 {
   config.systemd = {
-    tmpfiles.rules = [
-      "d ${cfg.internal.targetDir} 750 root users - -"
-    ];
+    tmpfiles.settings = {
+      "what-do-i-name-this?".rules."${cfg.internal.targetDir}".d = {
+        mode = "750";
+        user = "-";
+        group = "-";
+        age = "-";
+      };
+    };
     services."manage-flatpaks-activation" =
       pipe
         {
