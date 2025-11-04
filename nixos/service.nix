@@ -47,7 +47,7 @@ in
 {
   config.systemd = {
     tmpfiles.settings = {
-      "what-do-i-name-this?".rules."${cfg.internal.targetDir}".d = {
+      "flatpak-directory".rules."${cfg.internal.targetDir}".d = {
         mode = "750";
         user = "-";
         group = "-";
