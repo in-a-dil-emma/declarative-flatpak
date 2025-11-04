@@ -40,9 +40,6 @@ in
     tmpfiles.settings = {
       "flatpak-directory".rules."${cfg.internal.targetDir}".d = {
         mode = "750";
-        user = "-";
-        group = "-";
-        age = "-";
       };
     };
     services."manage-flatpaks-activation" =
