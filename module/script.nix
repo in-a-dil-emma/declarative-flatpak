@@ -120,7 +120,7 @@ let
         find "$i" -delete
       done
 
-      # it's absence is our indicator that the module is in the process of building a new generation
+      # its absence is our indicator that the module is in the process of building a new generation
       rm -f "$DATA_DIR"/config
 
       for i in "$DATA_DIR"/{repo-save,install-data,processed-exports}; do
