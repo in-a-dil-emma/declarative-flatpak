@@ -116,13 +116,18 @@ let
       trap 'fail' ERR
     '';
     dirs = ''
-      systemd-run ${system-user-switch} rm -rf "$DATA_DIR"/trash/!("$CURR_BOOTID")
+      for i in "$DATA_DIR"/trash/!("$CURR_BOOTID"); do
+        find "$i" -delete
+      done
 
       # it's absence is our indicator that the module is in the process of building a new generation
       rm -f "$DATA_DIR"/config
-      rm -rf "$DATA_DIR"/repo-save \
-        "$DATA_DIR"/install-data \
-        "$DATA_DIR"/processed-exports
+
+      for i in "$DATA_DIR"/{repo-save,install-data,processed-exports}; do
+        if test -d "$i"; then
+          find "$i" -delete
+        fi
+      done
 
       # we can try recycling the in-progress repo
       if [ -d "$NEW_FLATPAK_INSTALL"/repo ] && [ ! -e "$NEW_FLATPAK_INSTALL"/repo/dirty ]; then
@@ -130,7 +135,9 @@ let
         mv "$NEW_FLATPAK_INSTALL"/repo "$DATA_DIR"/repo-save
       fi
 
-      rm -rf "$NEW_FLATPAK_INSTALL"
+      if test -d "$NEW_FLATPAK_INSTALL"; then
+        find "$NEW_FLATPAK_INSTALL" -delete
+      fi
 
       mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides "$NEW_FLATPAK_INSTALL"/db
     '';
@@ -153,8 +160,11 @@ let
       ostree remote list --repo="$NEW_FLATPAK_INSTALL"/repo | while read r; do
         ostree remote delete --repo="$NEW_FLATPAK_INSTALL"/repo --if-exists "$r"
       done
-      rm -rf "$NEW_FLATPAK_INSTALL"/repo/refs/* \
-        "$NEW_FLATPAK_INSTALL"/repo/extensions/*
+      for i in "$NEW_FLATPAK_INSTALL"/repo/{refs,extensions}; do
+        if test -d "$i"; then
+          find "$i" -delete
+        fi
+      done
       mkdir -p \
         "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
         "$NEW_FLATPAK_INSTALL"/repo/extensions
@@ -246,15 +256,17 @@ let
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
         # Dereference because exports are symlinks by default
         rsync -aL --delete --remove-source-files "$NEW_FLATPAK_INSTALL"/exports/ "$DATA_DIR"/processed-exports/
-        rm -rf "$NEW_FLATPAK_INSTALL"/exports
+        find "$NEW_FLATPAK_INSTALL"/exports -delete
 
         # Then begin "processing" the exports to make them point to the correct locations
-        [ -d "$DATA_DIR"/processed-exports/bin ] && \
+        if [ -d "$DATA_DIR"/processed-exports/bin ]; then
           find "$DATA_DIR"/processed-exports/bin \
             -type f -exec sed -i 's,exec flatpak run,FLATPAK_USER_DIR='"'$CURRENT_FLATPAK_DIR'"' FLATPAK_SYSTEM_DIR='"'$CURRENT_FLATPAK_DIR'"' exec flatpak run,gm' '{}' \;
-        [ -d "$DATA_DIR"/processed-exports/share/applications ] && \
+        fi
+        if [ -d "$DATA_DIR"/processed-exports/share/applications ]; then
           find "$DATA_DIR"/processed-exports/share/applications \
             -type f -exec sed -i 's,Exec=flatpak run,Exec=env FLATPAK_USER_DIR='"'$CURRENT_FLATPAK_DIR'"' FLATPAK_SYSTEM_DIR='"'$CURRENT_FLATPAK_DIR'"' flatpak run,gm' '{}' \;
+        fi
 
         mv "$DATA_DIR"/processed-exports "$NEW_FLATPAK_INSTALL"/exports
       fi
@@ -280,7 +292,7 @@ let
     post-cleanup = ''
       echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
-      rm -rf "$NEW_FLATPAK_INSTALL"
+      find "$NEW_FLATPAK_INSTALL" -delete
       trap - ERR
     '';
   };
