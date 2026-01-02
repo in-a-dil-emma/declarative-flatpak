@@ -17,7 +17,7 @@ in
     services.flatpak.internal.targetDir = "${config.xdg.dataHome}/flatpak";
     assertions = mkIf (nixosConfig ? services.flatpak.enable) [
       {
-        assertion = config.services.flatpak.enable && nixosConfig.services.flatpak.enable;
+        assertion = config.services.flatpak.enable -> nixosConfig.services.flatpak.enable;
         message = ''
           You're using home-manager with NixOS.
           Flatpak is not enabled in your NixOS config.
