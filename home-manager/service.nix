@@ -22,11 +22,14 @@ let
       };
       Service = {
         ExecPaths = [
-          "/nix/store"
           "%t"
+          "/nix/store"
           cfg.internal.targetDir
         ];
-        ReadWritePaths = [ cfg.internal.targetDir "%t" ];
+        ReadWritePaths = [
+          cfg.internal.targetDir
+          "%t"
+        ];
         ProtectHome = "read-only";
         ProtectSystem = "strict";
         Restart = "on-failure";
