@@ -10,6 +10,12 @@ Declaratively manage Flatpak installations in NixOS and your $HOME
 > The home-manager module assumes that flatpak is usable on your system.
 > If this is not the case, do not bug report.
 
+> [!IMPORTANT]
+> The setup script performs changes in a transaction.
+> Errors cause the transaction to fail immediately.
+> Only successful transactions get applied.
+> Therefore, it may take a while until your changes take effect!
+
 Also try https://github.com/gmodena/nix-flatpak
 
 ## Setup
@@ -131,6 +137,10 @@ Releases are done through git tags.
 | flatpakDir               | path or null   | NixOS: `/var/lib/flatpak` ; <br>Home-Manager: `${XDG_DATA_HOME}/flatpak` |
 | forceRunOnActivation     | boolean        | false                                                                    |
 | onCalendar               | systemd time   | weekly                                                                   |
+
+> [!CAUTION]
+> `UNCHECKEDfinalizeCommand` will not cause the transaction to fail.
+> This hook should only be used for commands you don't care about failing.
 
 </details>
 
