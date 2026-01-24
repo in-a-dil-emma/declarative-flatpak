@@ -6,7 +6,7 @@ Declaratively manage Flatpak installations in NixOS and your $HOME
 > Expect at least a 2x storage usage increase.
 > This module *attempts* to optimize storage space use through reflinks, these require a filesystem capable of Copy-on-Write.
 
-> [!IMPORTANT]
+> [!WARNING]
 > The home-manager module assumes that flatpak is usable on your system.
 > If this is not the case, do not bug report.
 
