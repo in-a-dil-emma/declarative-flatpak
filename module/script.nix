@@ -56,7 +56,7 @@ let
       preRemotesCommand
       preInstallCommand
       preSwitchCommand
-      UNCHECKEDpostEverythingCommand
+      UNCHECKEDfinalizeCommand
       ;
   });
   system-user-switch = if is-hm then "--user" else "--system";
@@ -323,7 +323,7 @@ in
         script.exports
         script.switch
         script.post-cleanup
-        cfg.UNCHECKEDpostEverythingCommand
+        cfg.UNCHECKEDfinalizeCommand
       ]
     );
   };

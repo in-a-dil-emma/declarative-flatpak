@@ -5,5 +5,6 @@ in
 
 {
   imports = [
+    (mkRenamedOptionModule [ "services" "flatpak" "UNCHECKEDpostEverythingCommand" ] [ "services" "flatpak" "UNCHECKEDfinalizeCommand" ])
   ];
 }

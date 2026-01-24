@@ -83,7 +83,7 @@ in
         Which commands to run before the generation is activated.
       '';
     };
-    UNCHECKEDpostEverythingCommand = mkOption {
+    UNCHECKEDfinalizeCommand = mkOption {
       type = nullOr str;
       default = "";
       description = literalMD ''
