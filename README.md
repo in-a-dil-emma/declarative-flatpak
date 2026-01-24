@@ -2,19 +2,19 @@
 
 Declaratively manage Flatpak installations in NixOS and your $HOME
 
-> [!CAUTION]
-> Expect at least a 2x storage usage increase.
-> This module *attempts* to optimize storage space use through reflinks, these require a filesystem capable of Copy-on-Write.
-
-> [!WARNING]
-> The home-manager module assumes that flatpak is usable on your system.
-> If this is not the case, do not bug report.
-
 > [!IMPORTANT]
 > The setup script performs changes in a transaction.
 > Errors cause the transaction to fail immediately.
 > Only successful transactions get applied.
 > Therefore, it may take a while until your changes take effect!
+
+> [!WARNING]
+> The home-manager module assumes that flatpak is usable on your system.
+> If this is not the case, do not bug report.
+
+> [!CAUTION]
+> Expect at least a 2x storage usage increase.
+> This module *attempts* to optimize storage space use through reflinks, these require a filesystem capable of Copy-on-Write.
 
 Also try https://github.com/gmodena/nix-flatpak
 
