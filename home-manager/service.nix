@@ -41,9 +41,11 @@ in
 
 {
   config.systemd.user = {
-    tmpfiles.rules = [
-      "d ${cfg.internal.targetDir} 750 - - - -"
-    ];
+    tmpfiles.settings = {
+      "flatpak-directory".rules."${cfg.internal.targetDir}".d = {
+        mode = "750";
+      };
+    };
     services."manage-flatpaks-activation" =
       pipe
         {
