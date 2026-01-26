@@ -138,8 +138,9 @@ npins
 | forceRunOnActivation     | boolean        | false                                                                    |
 | onCalendar               | systemd time   | weekly                                                                   |
 
-> [!CAUTION]
-> UNCHECKEDfinalizeCommand will not cause the transaction to fail.
+> Caution:
+>
+> `UNCHECKEDfinalizeCommand` will not cause the transaction to fail.
 > This hook should only be used for commands you don't care about failing.
 
 </details>
