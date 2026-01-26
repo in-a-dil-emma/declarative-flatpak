@@ -18,6 +18,10 @@ Declaratively manage Flatpak installations in NixOS and your $HOME
 
 Also try https://github.com/gmodena/nix-flatpak
 
+## Versioning
+
+Releases are done through git tags.
+
 ## Setup
 
 ### Inputs
@@ -117,10 +121,6 @@ npins
 ```
 
 </details>
-
-## Versioning
-
-Releases are done through git tags.
 
 ## Configuring
 
