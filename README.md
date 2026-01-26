@@ -102,7 +102,7 @@ Flakes
 
 </details>
 
-<details>
+<details open>
 <summary>
 npins
 </summary>
