@@ -45,7 +45,7 @@ in
 {
   config.systemd = {
     tmpfiles.rules = [
-      "d ${cfg.internal.targetDir} 750 root users - -"
+      "d ${cfg.internal.targetDir}"
     ];
     services."manage-flatpaks-activation" =
       pipe
