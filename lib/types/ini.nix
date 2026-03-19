@@ -2,6 +2,6 @@
 {
   # Credit: https://github.com/PJungkamp #23 #25
   ini = pkgs.formats.ini {
-    listToValue = lib.concatMapStringsSep ";" (lib.generators.mkValueStringDefault { });
+    listToValue = l: (lib.concatMapStringsSep ";" (lib.generators.mkValueStringDefault { }) l) + ";";
   };
 }
