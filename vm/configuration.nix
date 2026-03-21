@@ -56,6 +56,9 @@
           "fallback-x11"
         ];
       };
+      # should not error
+      # see https://github.com/in-a-dil-emma/declarative-flatpak/pull/60
+      "org.vinegarhq.Sober".Context.devices = [ "input" ];
       "org.test.App" = {
         # Intentionally leave out everything for bugfix
       };
