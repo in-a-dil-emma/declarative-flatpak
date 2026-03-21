@@ -28,7 +28,7 @@
       #"flathub-beta:runtime/com.valvesoftware.Steam.Utility.vkBasalt//beta" # this runtime is cursed for some reason
       "flathub:app/org.kde.index//stable"
       "flathub-beta:app/org.mozilla.firefox//stable"
-      "launcher-moe:app/moe.launcher.honkers-launcher/x86_64/master"
+      "flathub:app/moe.launcher.honkers-launcher/x86_64/stable"
       "flathub:runtime/org.gtk.Gtk3theme.Breeze//3.22"
       "flathub:${./files/io.gitlab.daikhan.stable.flatpakref}"
       ":${./files/xwaylandvideobridge.flatpak}"
@@ -36,7 +36,6 @@
     remotes = {
       "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
       "flathub-beta" = "https://flathub.org/beta-repo/flathub-beta.flatpakrepo";
-      "launcher-moe" = ./files/gol.launcher.moe.flatpakrepo;
     };
     overrides = {
       "org.mozilla.firefox" = {
