@@ -120,8 +120,7 @@ let
     '';
     dirs = ''
       for i in "$DATA_DIR"/trash/!("$CURR_BOOTID"); do
-        find "$i" -d -delete || true
-        rm -rf -- "$i"
+        find "$i" -d -delete
       done
 
       # its absence is our indicator that the module is in the process of building a new generation
@@ -129,8 +128,7 @@ let
 
       for i in "$DATA_DIR"/{repo-save,install-data,processed-exports}; do
         if test -d "$i"; then
-          find "$i" -d -delete || true
-          rm -rf -- "$i"
+          find "$i" -d -delete
         fi
       done
 
@@ -141,8 +139,7 @@ let
       fi
 
       if test -d "$NEW_FLATPAK_INSTALL"; then
-        find "$NEW_FLATPAK_INSTALL" -d -delete || true
-        rm -rf -- "$NEW_FLATPAK_INSTALL"
+        find "$NEW_FLATPAK_INSTALL" -d -delete
       fi
 
       mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides "$NEW_FLATPAK_INSTALL"/db
@@ -168,8 +165,7 @@ let
       done
       for i in "$NEW_FLATPAK_INSTALL"/repo/{refs,extensions}; do
         if test -d "$i"; then
-          find "$i" -d -delete || true
-          rm -rf -- "$i"
+          find "$i" -d -delete
         fi
       done
       mkdir -p \
@@ -263,8 +259,7 @@ let
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
         # Dereference because exports are symlinks by default
         rsync -aL --delete --remove-source-files "$NEW_FLATPAK_INSTALL"/exports/ "$DATA_DIR"/processed-exports/
-        find "$NEW_FLATPAK_INSTALL"/exports -d -delete || true
-        rm -rf -- "$NEW_FLATPAK_INSTALL"/exports
+        find "$NEW_FLATPAK_INSTALL"/exports -d -delete
 
         # Then begin "processing" the exports to make them point to the correct locations
         if [ -d "$DATA_DIR"/processed-exports/bin ]; then
@@ -300,8 +295,7 @@ let
     post-cleanup = ''
       echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
-      find "$NEW_FLATPAK_INSTALL" -d -delete || true
-      rm -rf -- "$NEW_FLATPAK_INSTALL"
+      find "$NEW_FLATPAK_INSTALL" -d -delete
       trap - ERR
     '';
   };
