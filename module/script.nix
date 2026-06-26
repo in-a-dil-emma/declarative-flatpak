@@ -146,7 +146,7 @@ let
     '';
     recycle-repo = ''
       if [ -d "$DATA_DIR"/repo-save ]; then
-        touch "$DATA_DIR"/repo-save/dirty # has to be before mv because mv is not guaranteed to be atomic
+        touch "$DATA_DIR"/repo-save/dirty
         mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
         ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
       elif [ -d "$CURRENT_FLATPAK_DIR"/repo ] && [ ! -e "$CURRENT_FLATPAK_DIR"/repo/dirty ]; then
