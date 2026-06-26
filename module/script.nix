@@ -120,7 +120,7 @@ let
     '';
     dirs = ''
       for i in "$DATA_DIR"/trash/!("$CURR_BOOTID"); do
-        find "$i" -delete || true
+        find "$i" -d -delete || true
         rm -rf -- "$i"
       done
 
@@ -129,7 +129,7 @@ let
 
       for i in "$DATA_DIR"/{repo-save,install-data,processed-exports}; do
         if test -d "$i"; then
-          find "$i" -delete || true
+          find "$i" -d -delete || true
           rm -rf -- "$i"
         fi
       done
@@ -141,7 +141,7 @@ let
       fi
 
       if test -d "$NEW_FLATPAK_INSTALL"; then
-        find "$NEW_FLATPAK_INSTALL" -delete || true
+        find "$NEW_FLATPAK_INSTALL" -d -delete || true
         rm -rf -- "$NEW_FLATPAK_INSTALL"
       fi
 
@@ -168,7 +168,7 @@ let
       done
       for i in "$NEW_FLATPAK_INSTALL"/repo/{refs,extensions}; do
         if test -d "$i"; then
-          find "$i" -delete || true
+          find "$i" -d -delete || true
           rm -rf -- "$i"
         fi
       done
@@ -263,7 +263,7 @@ let
       if [ -d "$NEW_FLATPAK_INSTALL"/exports ]; then
         # Dereference because exports are symlinks by default
         rsync -aL --delete --remove-source-files "$NEW_FLATPAK_INSTALL"/exports/ "$DATA_DIR"/processed-exports/
-        find "$NEW_FLATPAK_INSTALL"/exports -delete || true
+        find "$NEW_FLATPAK_INSTALL"/exports -d -delete || true
         rm -rf -- "$NEW_FLATPAK_INSTALL"/exports
 
         # Then begin "processing" the exports to make them point to the correct locations
@@ -300,7 +300,7 @@ let
     post-cleanup = ''
       echo "Finishing up"
       ln -snfT ${filecfg} "$DATA_DIR"/config
-      find "$NEW_FLATPAK_INSTALL" -delete || true
+      find "$NEW_FLATPAK_INSTALL" -d -delete || true
       rm -rf -- "$NEW_FLATPAK_INSTALL"
       trap - ERR
     '';
