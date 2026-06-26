@@ -21,6 +21,7 @@ let
         StartLimitBurst = 3;
       };
       Service = {
+        SyslogIdentifier = "manage-flatpaks";
         ExecPaths = [
           "%t"
           "/nix/store"

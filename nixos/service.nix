@@ -28,6 +28,7 @@ let
         StartLimitBurst = 3;
       };
       serviceConfig = {
+        SyslogIdentifier = "manage-flatpaks";
         ExecPaths = [
           "/nix/store"
           cfg.internal.targetDir
