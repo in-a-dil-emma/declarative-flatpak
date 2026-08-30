@@ -71,9 +71,11 @@ let
       fi
     '';
     setup = ''
-      ${optionalString cfg.veryVerbose "set -vx"}
+      ${optionalString cfg.veryVerbose "set -x"}
       set -eu
       shopt -s extglob nullglob
+
+      export PS4='+ L$LINENO '
 
       PATH="${
         makeBinPath [
@@ -112,9 +114,11 @@ let
       export FLATPAK_SYSTEM_DIR="$NEW_FLATPAK_INSTALL"
 
       function fail {
+        trap - ERR
         # a partially copied ostree repo cannot be trusted
         # in the off-chance that a flatpak command fails this will get created and the second service run will start from scratch
         touch "$NEW_FLATPAK_INSTALL"/repo/dirty
+        exit 1
       }
       trap 'fail' ERR
     '';
