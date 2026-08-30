@@ -1,7 +1,16 @@
-{ pkgs, ... }:
-{
+{ pkgs, lib, ... }: let
+  inherit (pkgs.kdePackages)
+    plasma-workspace
+    ;
+  inherit (lib)
+    getExe'
+    ;
+  inherit (builtins)
+    getEnv
+    ;
+in {
   virtualisation = {
-    graphics = false;
+    graphics = true;
     cores = 4;
     memorySize = 1024 * 4;
     diskSize = 1024 * 64;
@@ -18,6 +27,26 @@
         "-device virtconsole,chardev=char0,nr=0"
       ];
     };
+  };
+
+  i18n.defaultLocale = getEnv "LANG";
+  services.xserver.xkb = {
+    # make sure you have configured your host's keyboard settings
+    layout = getEnv "XKB_DEFAULT_LAYOUT";
+    model = getEnv "XKB_DEFAULT_LAYOUT";
+  };
+
+  systemd.user.services."plasma-perf-fix" = {
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "plasma-ksmserver.service" ];
+    script = ''
+      ${getExe' plasma-workspace "plasma-apply-desktoptheme"} breeze-light
+    '';
+  };
+
+  services = {
+    desktopManager.plasma6.enable = true;
+    displayManager.sddm.enable = true;
   };
 
   documentation.enable = false;
@@ -109,6 +138,10 @@
     };
   };
 
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "user";
+  };
   services.getty.autologinUser = "user";
   users.users."user" = {
     isNormalUser = true;
