@@ -8,6 +8,11 @@ let
     mkIf cfg.enable (
       recursiveUpdate {
         Unit = rec {
+          Wants = [
+            # if you have such target in your config
+            "network-online.target"
+          ];
+          After = Wants;
           ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
           RequiresMountsFor = [ cfg.internal.targetDir ];
           Description = "Manage flatpaks";
