@@ -9,15 +9,15 @@
       },
       "branch": "release-26.05",
       "submodules": false,
-      "revision": "d4fd24667c8cbef124bb70a20380cab75ec8474d",
-      "url": "https://github.com/nix-community/home-manager/archive/d4fd24667c8cbef124bb70a20380cab75ec8474d.tar.gz",
-      "hash": "sha256-Rgs2xKnGLFWQscxUaXX07oyZeuMDOHEbqDOsgliLFGM="
+      "revision": "65258d5c65a250189fde2e35f490d15e064c4c62",
+      "url": "https://github.com/nix-community/home-manager/archive/65258d5c65a250189fde2e35f490d15e064c4c62.tar.gz",
+      "hash": "sha256-Sxu1NLTD/Ern6hFGLlZmtKCSct3YQXZI/lls8RE1XeM="
     },
     "nixpkgs": {
       "type": "Channel",
       "name": "nixos-26.05",
-      "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.7376.fcb8fcd6bf2d/nixexprs.tar.xz",
-      "hash": "sha256-F5163SsL9xqCLcx8CS2Y5MeLA5z6mfgXGDiCBEqSnbo="
+      "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8639.c5c4a43b0e80/nixexprs.tar.xz",
+      "hash": "sha256-SYbFPw4Je7tTpsl5qPqmmxPWuQyA9AGddCDieY5QG5A="
     },
     "treefmt-nix": {
       "type": "Git",
@@ -28,9 +28,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "ae7910970dddc408fe6ab1c8e4b277bb21d72dc0",
-      "url": "https://github.com/numtide/treefmt-nix/archive/ae7910970dddc408fe6ab1c8e4b277bb21d72dc0.tar.gz",
-      "hash": "sha256-NLSyTCW4K4ofhNBllt3omPasm6QpralXH1DBZOc91Dw="
+      "revision": "27b3b12a8e6375f28ebe122f07d230ca5459bbfa",
+      "url": "https://github.com/numtide/treefmt-nix/archive/27b3b12a8e6375f28ebe122f07d230ca5459bbfa.tar.gz",
+      "hash": "sha256-WSFCsDSE5ffgD2MqzkM2CYjeFiKhRF/dJUN8uedb6YE="
     }
   },
   "version": 7
