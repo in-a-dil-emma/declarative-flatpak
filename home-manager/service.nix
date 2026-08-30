@@ -1,86 +1,61 @@
 { config, lib, ... }:
 
 let
-  inherit (lib) mkIf pipe recursiveUpdate;
+  inherit (lib) mkIf recursiveUpdate;
   cfg = config.services.flatpak;
-  applyUnitOrdering =
+  applyServiceConfig =
     prev:
-    recursiveUpdate {
-      Install.WantedBy = [
-        "default.target"
-      ];
-    } prev;
-  applySharedServiceConfig =
-    prev:
-    recursiveUpdate {
-      Unit = {
-        ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
-        RequiresMountsFor = [ cfg.internal.targetDir ];
-        Description = "Manage flatpaks";
-        StartLimitIntervalSec = 60;
-        StartLimitBurst = 3;
-      };
-      Service = {
-        SyslogIdentifier = "manage-flatpaks";
-        ExecPaths = [
-          "%t"
-          "/nix/store"
-          cfg.internal.targetDir
+    mkIf cfg.enable (
+      recursiveUpdate {
+        Unit = rec {
+          ConditionPathIsReadWrite = [ cfg.internal.targetDir ];
+          RequiresMountsFor = [ cfg.internal.targetDir ];
+          Description = "Manage flatpaks";
+          StartLimitIntervalSec = 60;
+          StartLimitBurst = 3;
+        };
+        Service = {
+          SyslogIdentifier = "manage-flatpaks";
+          ExecPaths = [
+            "%t"
+            "/nix/store"
+            cfg.internal.targetDir
+          ];
+          ReadWritePaths = [
+            cfg.internal.targetDir
+            "%t"
+          ];
+          ProtectHome = "read-only";
+          ProtectSystem = "strict";
+          Restart = "on-failure";
+          NoExecPaths = [ "/" ];
+          PrivateTmp = true;
+        };
+        Install.WantedBy = [
+          "default.target"
         ];
-        ReadWritePaths = [
-          cfg.internal.targetDir
-          "%t"
-        ];
-        ProtectHome = "read-only";
-        ProtectSystem = "strict";
-        Restart = "on-failure";
-        NoExecPaths = [ "/" ];
-        PrivateTmp = true;
-      };
-    } prev;
+      } prev
+    );
 in
 
 {
   config.systemd.user = {
-    tmpfiles.rules = [
+    tmpfiles.rules = mkIf cfg.enable [
       "d ${cfg.internal.targetDir}"
     ];
-    services."manage-flatpaks-activation" =
-      pipe
-        {
-          Unit = {
-            Before = "manage-flatpaks-auto.service";
-          };
-          Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
-        }
-        [
-          applyUnitOrdering
-          applySharedServiceConfig
-          (mkIf cfg.enable)
-        ];
-    services."manage-flatpaks-auto" =
-      pipe
-        {
-          Unit = {
-            After = "manage-flatpaks-activation.service";
-          };
-          Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
-        }
-        [
-          applySharedServiceConfig
-          (mkIf cfg.enable)
-        ];
-    timers."manage-flatpaks-auto" =
-      pipe
-        {
-          Timer = {
-            OnCalendar = cfg.onCalendar;
-            Persistent = true;
-          };
-        }
-        [
-          applyUnitOrdering
-          (mkIf cfg.enable)
-        ];
+    services."manage-flatpaks-activation" = applyServiceConfig {
+      Unit.Before = "manage-flatpaks-auto.service";
+      Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
+    };
+    services."manage-flatpaks-auto" = applyServiceConfig {
+      Unit.After = "manage-flatpaks-activation.service";
+      Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
+    };
+    timers."manage-flatpaks-auto" = mkIf cfg.enable {
+      Timer = {
+        OnCalendar = cfg.onCalendar;
+        Persistent = true;
+      };
+    };
   };
 }
