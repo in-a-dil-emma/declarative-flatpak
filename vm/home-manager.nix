@@ -13,7 +13,7 @@
           veryVerbose = true;
           packages = [
             "flathub-beta:app/org.mozilla.firefox//beta"
-            "flathub:app/com.usebottles.bottles//stable:e53e9e154949a9e542f94a5dbd2422446e4e7c15aa62e11e4a0aeaba09be446f"
+            "flathub:app/com.usebottles.bottles//stable" # commits just go 404 after a while :e53e9e154949a9e542f94a5dbd2422446e4e7c15aa62e11e4a0aeaba09be446f"
           ];
           remotes = {
             "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
