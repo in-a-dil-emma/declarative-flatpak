@@ -231,12 +231,12 @@ let
     '';
     install-local = ''
       echo "Installing out-of-tree refs"
-      for i in ${toString (filter (x: match ":.+\.flatpak$" x != null) cfg.packages)}; do
+      for i in ${toString (filter (x: match ":.+.flatpak$" x != null) cfg.packages)}; do
         _id="$(grep -Eo ':.+\.flatpak$' <<< $i | tail -c+2)"
 
         flatpak ${system-user-switch} install --noninteractive --or-update --no-auto-pin "$_id" || exit 1
       done
-      for i in ${toString (filter (x: match ":.+\.flatpakref$" x != null) cfg.packages)}; do
+      for i in ${toString (filter (x: match ":.+.flatpakref$" x != null) cfg.packages)}; do
         _remote="$(grep -Eo '^${fremote}:' <<< $i | head -c-2)"
         _id="$(grep -Eo ':.+\.flatpakref$' <<< $i | tail -c+2)"
 
