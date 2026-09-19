@@ -55,7 +55,7 @@ runNixOSTest {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
         flatpakDir = "/target";
-        forceRunOnActivation = true;
+        alwaysRunOnActivation = true;
         UNCHECKEDfinalizeCommand = ''
           touch /target/repo/thisfileshouldpersist
           touch /target/thisfileshouldnotpersist

@@ -153,10 +153,7 @@ in
     #   description = ''
     #   '';
     # };
-    forceRunOnActivation = mkOption {
-      type = bool;
-      default = false;
-    };
+    alwaysRunOnActivation = mkEnableOption "Perform flatpak management on activation, regardless if it's necessary or not. When disabled, only the background script ignores config diff checks. Enabling this option makes the activation ignore the config diff check as well.";
     onCalendar = mkOption {
       type = str;
       default = "weekly";

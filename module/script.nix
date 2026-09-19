@@ -64,7 +64,7 @@ let
     echo "Executing step: ${name}"
     ${value}
   '') {
-    config-diff = optionalString (!cfg.forceRunOnActivation) ''
+    config-diff = optionalString (!cfg.alwaysRunOnActivation) ''
       if [ -e "$DATA_DIR/config" ] && cmp -s ${filecfg} "$DATA_DIR/config"; then
         echo "Configs do not differ, therefore I won't do anything. You may change this default behaviour"
         exit 0
