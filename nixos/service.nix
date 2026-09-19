@@ -1,7 +1,10 @@
 { config, lib, ... }:
 
 let
-  inherit (lib) mkIf recursiveUpdate;
+  inherit (lib)
+    recursiveUpdate
+    mkIf
+    ;
   cfg = config.services.flatpak;
   applyServiceConfig =
     prev:
