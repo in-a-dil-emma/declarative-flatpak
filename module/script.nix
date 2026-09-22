@@ -294,7 +294,11 @@ let
           pushd "$NEW_FLATPAK_INSTALL"
           touch repo/dirty
           for i in *; do
-            mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
+            if [[ -d "$CURRENT_FLATPAK_DIR"/"$i" ]]; then
+              mv "$i"/* "$CURRENT_FLATPAK_DIR"/"$i"
+            else
+              mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
+            fi
           done
           popd
           rm "$CURRENT_FLATPAK_DIR"/repo/dirty
