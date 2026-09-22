@@ -1,4 +1,5 @@
-{ pkgs, lib, ... }: let
+{ pkgs, lib, ... }:
+let
   inherit (pkgs.kdePackages)
     plasma-workspace
     ;
@@ -8,7 +9,8 @@
   inherit (builtins)
     getEnv
     ;
-in {
+in
+{
   virtualisation = {
     graphics = true;
     cores = 4;
