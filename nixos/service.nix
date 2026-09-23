@@ -18,6 +18,7 @@ let
           StartLimitBurst = 3;
         };
         serviceConfig = {
+          Type = "oneshot";
           SyslogIdentifier = "manage-flatpaks";
           ExecPaths = [
             "/nix/store"

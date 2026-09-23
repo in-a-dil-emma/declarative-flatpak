@@ -24,6 +24,7 @@ let
           StartLimitBurst = 3;
         };
         Service = {
+          Type = "oneshot";
           SyslogIdentifier = "manage-flatpaks";
           ExecPaths = [
             "%t"
