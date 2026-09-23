@@ -127,17 +127,18 @@ npins
 <details>
 <summary>services → <b>flatpak</b></summary>
 
-| OPTION                   | TYPE           | DEFAULT                                                                  |
-|--------------------------|----------------|--------------------------------------------------------------------------|
-| enable                   | boolean        | false                                                                    |
-| preRemotesCommand        | string or null | null                                                                     |
-| preInstallCommand        | string or null | null                                                                     |
-| preSwitchCommand         | string or null | null                                                                     |
-| UNCHECKEDfinalizeCommand | string or null | null                                                                     |
-| flatpakDir               | path or null   | NixOS: `/var/lib/flatpak` ; <br>Home-Manager: `${XDG_DATA_HOME}/flatpak` |
-| alwaysRunOnActivation    | boolean        | false                                                                    |
-| runWithoutGui            | boolean        | false                                                                    |
-| onCalendar               | systemd time   | weekly                                                                   |
+| OPTION                    | TYPE           | DEFAULT                                                                  |
+|---------------------------|----------------|--------------------------------------------------------------------------|
+| enable                    | boolean        | false                                                                    |
+| preRemotesCommand         | string or null | null                                                                     |
+| preInstallCommand         | string or null | null                                                                     |
+| preSwitchCommand          | string or null | null                                                                     |
+| UNCHECKEDfinalizeCommand  | string or null | null                                                                     |
+| flatpakDir                | path or null   | NixOS: `/var/lib/flatpak` ; <br>Home-Manager: `${XDG_DATA_HOME}/flatpak` |
+| alwaysRunOnActivation     | boolean        | false                                                                    |
+| runWithoutGui             | boolean        | false                                                                    |
+| onCalendar                | systemd time   | weekly                                                                   |
+| delayStartup (nixos only) | boolean        | false                                                                    |
 
 > Caution:
 >

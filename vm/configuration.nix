@@ -99,6 +99,7 @@ in
     onCalendar = "*-*-* *:00,15,30,45:00";
     flatpakDir = "/flatpak";
     runWithoutGui = true;
+    delayStartup = true;
     veryVerbose = true;
   };
 

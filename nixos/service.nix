@@ -52,6 +52,10 @@ in
         (mkIf (!cfg.runWithoutGui) [ "graphical.target" ])
         (mkIf cfg.runWithoutGui [ "multi-user.target" ])
       ];
+      before = mkMerge [
+        (mkIf (cfg.delayStartup && !cfg.runWithoutGui) [ "display-manager.service" ])
+        (mkIf (cfg.delayStartup && cfg.runWithoutGui) [ "systemd-user-sessions.service" ])
+      ];
     };
     services."manage-flatpaks-auto" = applyServiceConfig {
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
