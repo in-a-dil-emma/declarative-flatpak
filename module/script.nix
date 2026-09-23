@@ -131,7 +131,7 @@ let
           done
 
           # its absence is our indicator that the module is in the process of building a new generation
-          rm -f "$DATA_DIR"/config
+          rm -f -- "$DATA_DIR"/config
 
           for i in "$DATA_DIR"/{repo-save,install-data,processed-exports}; do
             if test -d "$i"; then
@@ -145,11 +145,21 @@ let
             mv "$NEW_FLATPAK_INSTALL"/repo "$DATA_DIR"/repo-save
           fi
 
-          if test -d "$NEW_FLATPAK_INSTALL"; then
+          if [ -d "$NEW_FLATPAK_INSTALL" ]; then
             find "$NEW_FLATPAK_INSTALL" -d -delete
+          fi
+          # recover from a failed db migration...
+          if [ -d "$CURRENT_FLATPAK_DIR"/db.old ]; then
+            if [ -d "$CURRENT_FLATPAK_DIR"/db ]; then
+              rm -rf -- "$CURRENT_FLATPAK_DIR"/db
+            fi
+            mv "$CURRENT_FLATPAK_DIR"/db{.old,}
           fi
 
           mkdir -pm 755 "$DATA_DIR" "$NEW_FLATPAK_INSTALL" "$TRASH_DIR" "$DATA_DIR"/install-data "$NEW_FLATPAK_INSTALL"/overrides "$NEW_FLATPAK_INSTALL"/db
+          if [ -d "$CURRENT_FLATPAK_DIR/db" ]; then
+            rsync -va "$CURRENT_FLATPAK_DIR"/db/ "$NEW_FLATPAK_INSTALL"/db/
+          fi
         '';
         recycle-repo = ''
           if [ -d "$DATA_DIR"/repo-save ]; then
@@ -161,7 +171,7 @@ let
             touch "$CURRENT_FLATPAK_DIR"/repo/dirty
             cp -a --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
             ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
-            rm "$CURRENT_FLATPAK_DIR"/repo/dirty
+            rm -- "$CURRENT_FLATPAK_DIR"/repo/dirty
           else
             echo "Creating repo from scratch"
             ostree init --repo="$NEW_FLATPAK_INSTALL"/repo --mode=bare-user-only
@@ -178,7 +188,7 @@ let
           mkdir -p \
             "$NEW_FLATPAK_INSTALL"/repo/refs/{heads,mirrors,remotes} \
             "$NEW_FLATPAK_INSTALL"/repo/extensions
-          rm "$NEW_FLATPAK_INSTALL"/repo/dirty
+          rm -- "$NEW_FLATPAK_INSTALL"/repo/dirty
         '';
         add-remotes = toString (
           attrValues (
@@ -283,6 +293,14 @@ let
         '';
         switch = ''
           echo "Moving old data for future deletion"
+          # Special handling of db, because that is outside state we do not want to manage
+          if [ -d db ]; then
+            # in case the target dir already exists...
+            rsync -va --delete db/ "$CURRENT_FLATPAK_DIR"/db.new/
+            rm -rf db
+            mv "$CURRENT_FLATPAK_DIR"/db{,.old}
+            mv "$CURRENT_FLATPAK_DIR"/db{.new,}
+          fi
           {
             dirs=("$CURRENT_FLATPAK_DIR"/!("$MODULE_DIR_INFIX"|db))
             if (( ''${#dirs[@]} > 0 )); then
@@ -294,14 +312,10 @@ let
           pushd "$NEW_FLATPAK_INSTALL"
           touch repo/dirty
           for i in *; do
-            if [[ -d "$i" && -d "$CURRENT_FLATPAK_DIR"/"$i" ]]; then
-              mv "$i"/* "$CURRENT_FLATPAK_DIR"/"$i"
-            else
-              mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
-            fi
+            mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
           done
           popd
-          rm "$CURRENT_FLATPAK_DIR"/repo/dirty
+          rm -- "$CURRENT_FLATPAK_DIR"/repo/dirty
         '';
         post-cleanup = ''
           echo "Finishing up"
