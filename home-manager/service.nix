@@ -39,9 +39,6 @@ let
           NoExecPaths = [ "/" ];
           PrivateTmp = true;
         };
-        Install.WantedBy = [
-          "default.target"
-        ];
       } prev
     );
 in
@@ -52,12 +49,12 @@ in
       "d ${cfg.internal.targetDir}"
     ];
     services."manage-flatpaks-activation" = applyServiceConfig {
-      Unit.Before = "manage-flatpaks-auto.service";
       Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
+      Install.WantedBy = [ "default.target" ];
     };
     services."manage-flatpaks-auto" = applyServiceConfig {
-      Unit.After = "manage-flatpaks-activation.service";
       Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
+      Unit.After = [ "manage-flatpaks-activation.service" ];
     };
     timers."manage-flatpaks-auto" = mkIf cfg.enable {
       Timer = {

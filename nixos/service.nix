@@ -34,9 +34,6 @@ let
         after = [
           "network-online.target"
         ];
-        wantedBy = [
-          "multi-user.target"
-        ];
       } prev
     );
 in
@@ -47,12 +44,12 @@ in
       "d ${cfg.internal.targetDir}"
     ];
     services."manage-flatpaks-activation" = applyServiceConfig {
-      before = [ "manage-flatpaks-auto.service" ];
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
+      wantedBy = [ "multi-user.target" ];
     };
     services."manage-flatpaks-auto" = applyServiceConfig {
-      after = [ "manage-flatpaks-activation.service" ];
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
+      after = [ "manage-flatpaks-activation.service" ];
     };
     timers."manage-flatpaks-auto" = mkIf cfg.enable {
       timerConfig = {
