@@ -3,6 +3,7 @@
 let
   inherit (lib)
     recursiveUpdate
+    mkMerge
     mkIf
     ;
   cfg = config.services.flatpak;
@@ -50,11 +51,17 @@ in
     ];
     services."manage-flatpaks-activation" = applyServiceConfig {
       Service.ExecStart = config.services.flatpak.internal.mainScript.activation;
-      Install.WantedBy = [ "default.target" ];
+      Install.WantedBy = mkMerge [
+        (mkIf (!cfg.runWithoutGui) [ "graphical-session.target" ])
+        (mkIf cfg.runWithoutGui [ "default.target" ])
+      ];
     };
     services."manage-flatpaks-auto" = applyServiceConfig {
       Service.ExecStart = config.services.flatpak.internal.mainScript.auto;
       Unit.After = [ "manage-flatpaks-activation.service" ];
+      Unit.Requisite = mkIf (!cfg.runWithoutGui) [
+        "graphical-session.target"
+      ];
     };
     timers."manage-flatpaks-auto" = mkIf cfg.enable {
       Timer = {

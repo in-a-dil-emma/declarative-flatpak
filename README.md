@@ -136,6 +136,7 @@ npins
 | UNCHECKEDfinalizeCommand | string or null | null                                                                     |
 | flatpakDir               | path or null   | NixOS: `/var/lib/flatpak` ; <br>Home-Manager: `${XDG_DATA_HOME}/flatpak` |
 | alwaysRunOnActivation    | boolean        | false                                                                    |
+| runWithoutGui            | boolean        | false                                                                    |
 | onCalendar               | systemd time   | weekly                                                                   |
 
 > Caution:

@@ -1,6 +1,7 @@
 let
   inputs = import ../npins;
   pkgs = import inputs.nixpkgs { };
+  lib = pkgs.lib;
   inherit (pkgs.testers) runNixOSTest;
 in
 runNixOSTest {
@@ -18,6 +19,7 @@ runNixOSTest {
 
     services.flatpak = {
       alwaysRunOnActivation = true;
+      runWithoutGui = true;
       veryVerbose = true;
       enable = true;
     };
@@ -33,6 +35,10 @@ runNixOSTest {
 
   nodes = {
     bare = { };
+    graphical = {
+      services.flatpak.runWithoutGui = lib.mkForce false;
+      systemd.targets."graphical".enable = true;
+    };
     dirs = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
@@ -74,6 +80,11 @@ runNixOSTest {
     bare.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     bare.succeed("which flatpak")
     bare.succeed("[ $(flatpak list --system | wc -l) -eq 0 ]")
+
+    graphical.wait_for_unit("multi-user.target")
+    graphical.require_unit_state("graphical.target", "inactive")
+    graphical.start_job("graphical.target")
+    graphical.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
 
     dirs.wait_for_unit("multi-user.target")
     dirs.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)

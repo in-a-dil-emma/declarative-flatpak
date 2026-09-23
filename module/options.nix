@@ -154,6 +154,10 @@ in
     #   '';
     # };
     alwaysRunOnActivation = mkEnableOption "Perform flatpak management on activation, regardless if it's necessary or not. When disabled, only the background script ignores config diff checks. Enabling this option makes the activation ignore the config diff check as well.";
+    runWithoutGui = mkOption {
+      type = bool;
+      default = builtins.trace "Starting with v4.2.0, declarative-flatpak will only run when a graphical session has started. If you wish to keep the old behaviour, set services.flatpak.runWithoutGui to true" false;
+    };
     onCalendar = mkOption {
       type = str;
       default = "weekly";
