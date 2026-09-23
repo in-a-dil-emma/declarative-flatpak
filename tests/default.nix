@@ -18,7 +18,6 @@ runNixOSTest {
     };
 
     services.flatpak = {
-      alwaysRunOnActivation = true;
       runWithoutGui = true;
       veryVerbose = true;
       enable = true;
@@ -61,6 +60,7 @@ runNixOSTest {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
         flatpakDir = "/target";
+        alwaysRunOnActivation = true;
         UNCHECKEDfinalizeCommand = ''
           # This check ensures that these files are created only once...
           # On first run, this condition will be true, on the second, it will be false.
@@ -70,6 +70,16 @@ runNixOSTest {
             touch /target/db/thisfileshouldpersist
           fi
           touch /target/repo/thisfileshouldpersist
+        '';
+      };
+    };
+    always = {
+      # Check if the activation script runs only on the first boot.
+      # It shouldn't run a second time, because of the config diff check.
+      services.flatpak = {
+        flatpakDir = "/target";
+        UNCHECKEDfinalizeCommand = ''
+          touch /target/thisfileshouldnotpersist
         '';
       };
     };
@@ -111,5 +121,18 @@ runNixOSTest {
     persist.succeed("stat /target/repo/thisfileshouldpersist")
     persist.succeed("stat /target/db/thisfileshouldpersist")
     persist.fail("stat /target/thisfileshouldnotpersist")
+
+    always.start(allow_reboot=True)
+    always.wait_for_unit("multi-user.target")
+    always.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    always.succeed("stat /target/thisfileshouldnotpersist")
+    always.reboot()
+    always.wait_for_unit("multi-user.target")
+    always.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    always.succeed("rm /target/thisfileshouldnotpersist")
+    always.reboot()
+    always.wait_for_unit("multi-user.target")
+    always.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    always.fail("stat /target/thisfileshouldnotpersist")
   '';
 }
