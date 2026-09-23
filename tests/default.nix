@@ -11,7 +11,14 @@ runNixOSTest {
       ../nixos
     ];
 
+    systemd = {
+      services."manage-flatpaks-activation".onSuccess = [ "complete.target" ];
+      targets."complete".enable = true;
+    };
+
     services.flatpak = {
+      alwaysRunOnActivation = true;
+      veryVerbose = true;
       enable = true;
     };
 
@@ -26,17 +33,10 @@ runNixOSTest {
 
   nodes = {
     bare = { };
-    custom_dirs = {
+    dirs = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
         flatpakDir = "/target";
-      };
-    };
-    nothing = {
-      services.flatpak = {
-        remotes = { };
-        packages = [ ];
-        overrides = { };
       };
     };
     installation = {
@@ -51,24 +51,19 @@ runNixOSTest {
         ];
       };
     };
-    persist-partial = {
-      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
-      services.flatpak = {
-        flatpakDir = "/target";
-        alwaysRunOnActivation = true;
-        UNCHECKEDfinalizeCommand = ''
-          touch /target/repo/thisfileshouldpersist
-          touch /target/thisfileshouldnotpersist
-        '';
-      };
-    };
     persist = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
         flatpakDir = "/target";
         UNCHECKEDfinalizeCommand = ''
+          # This check ensures that these files are created only once...
+          # On first run, this condition will be true, on the second, it will be false.
+          # If the service restarts before the reboot, that's a problem that needs to be fixed.
+          if [ ! -e /target/repo/thisfileshouldpersist ]; then
+            touch /target/thisfileshouldnotpersist
+            touch /target/db/thisfileshouldpersist
+          fi
           touch /target/repo/thisfileshouldpersist
-          touch /target/thisfileshouldnotpersist
         '';
       };
     };
@@ -76,43 +71,34 @@ runNixOSTest {
 
   testScript = ''
     bare.wait_for_unit("multi-user.target")
+    bare.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     bare.succeed("which flatpak")
-    bare.succeed("systemctl list-unit-files -l | grep 'manage-flatpaks'")
+    bare.succeed("[ $(flatpak list --system | wc -l) -eq 0 ]")
 
-    nothing.wait_for_unit("multi-user.target")
-    nothing.succeed("[ $(flatpak list | wc -l) -eq 0 ]")
+    dirs.wait_for_unit("multi-user.target")
+    dirs.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    dirs.succeed("stat /target")
 
-    custom_dirs.wait_until_succeeds("stat /target", timeout=60)
-
-    # ironically the main feature of this module doesn't have a working test
-    #installation.wait_until_succeeds("stat /target/.module", timeout=120)
-    #installation.wait_until_succeeds("stat /target/repo", timeout=120)
-    #installation.wait_until_succeeds("stat /target/exports", timeout=120)
+    #installation.wait_for_unit("multi-user.target")
+    #installation.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    #installation.succeed("stat /target/.module")
+    #installation.succeed("stat /target/repo")
+    #installation.succeed("stat /target/exports")
     #installation.succeed("stat /target/exports/bin/org.kde.xwaylandvideobridge")
     #installation.succeed("flatpak run --command=true org.kde.xwaylandvideobridge")
 
-    persist_partial.start(allow_reboot=True)
-    persist_partial.wait_for_unit("multi-user.target")
-    persist_partial.wait_for_file("/target/repo", timeout=120)
-    # Added by POST hook, both should succeed
-    persist_partial.succeed("stat /target/repo/thisfileshouldpersist")
-    persist_partial.succeed("stat /target/thisfileshouldnotpersist")
-    persist_partial.reboot()
-    persist_partial.wait_for_unit("multi-user.target")
-    persist_partial.wait_until_fails("stat /target/.module/new", timeout=60)
-    persist_partial.succeed("stat /target/repo/thisfileshouldpersist")
-    persist_partial.fail("stat /target/thisfileshouldnotpersist")
-
     persist.start(allow_reboot=True)
     persist.wait_for_unit("multi-user.target")
-    persist.wait_for_file("/target/repo", timeout=120)
+    persist.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     # Added by POST hook, both should succeed
     persist.succeed("stat /target/repo/thisfileshouldpersist")
+    persist.succeed("stat /target/db/thisfileshouldpersist")
     persist.succeed("stat /target/thisfileshouldnotpersist")
     persist.reboot()
     persist.wait_for_unit("multi-user.target")
-    persist.wait_until_fails("stat /target/.module/new", timeout=60)
+    persist.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     persist.succeed("stat /target/repo/thisfileshouldpersist")
-    persist.succeed("stat /target/thisfileshouldnotpersist")
+    persist.succeed("stat /target/db/thisfileshouldpersist")
+    persist.fail("stat /target/thisfileshouldnotpersist")
   '';
 }
