@@ -1,7 +1,7 @@
 let
   inputs = import ../npins;
   pkgs = import inputs.nixpkgs { };
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   inherit (pkgs.testers) runNixOSTest;
 in
 runNixOSTest {
@@ -111,7 +111,6 @@ runNixOSTest {
     persist.start(allow_reboot=True)
     persist.wait_for_unit("multi-user.target")
     persist.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
-    # Added by POST hook, both should succeed
     persist.succeed("stat /target/repo/thisfileshouldpersist")
     persist.succeed("stat /target/db/thisfileshouldpersist")
     persist.succeed("stat /target/thisfileshouldnotpersist")
