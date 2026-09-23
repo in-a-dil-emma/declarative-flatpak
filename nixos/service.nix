@@ -1,9 +1,13 @@
 { config, lib, ... }:
 
 let
+  xlib = import ../lib/modules.nix { inherit lib; };
+  inherit (xlib)
+    mkIfElseIf
+    mkIfElse
+    ;
   inherit (lib)
     recursiveUpdate
-    mkMerge
     mkIf
     ;
   cfg = config.services.flatpak;
@@ -47,15 +51,11 @@ in
     ];
     services."manage-flatpaks-activation" = applyServiceConfig {
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
-      # mkIfElse when?
-      wantedBy = mkMerge [
-        (mkIf (!cfg.runWithoutGui) [ "graphical.target" ])
-        (mkIf cfg.runWithoutGui [ "multi-user.target" ])
-      ];
-      before = mkMerge [
-        (mkIf (cfg.delayStartup && !cfg.runWithoutGui) [ "display-manager.service" ])
-        (mkIf (cfg.delayStartup && cfg.runWithoutGui) [ "systemd-user-sessions.service" ])
-      ];
+      wantedBy = mkIfElse cfg.runWithoutGui [ "multi-user.target" ] [ "graphical.target" ];
+      before =
+        mkIfElseIf cfg.delayStartup cfg.runWithoutGui
+          [ "systemd-user-sessions.service" ]
+          [ "display-manager.service" ];
     };
     services."manage-flatpaks-auto" = applyServiceConfig {
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.auto;
