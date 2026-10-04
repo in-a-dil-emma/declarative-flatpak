@@ -43,15 +43,13 @@
   };
 
   testScript = ''
-    double.start(allow_reboot=True)
     double.succeed("stat /target/db/db")
     double.wait_for_unit("multi-user.target")
     double.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    double.succeed("stat /target/db/db")
     double.fail("stat /target/db/db/db")
 
-    clone.start(allow_reboot=True)
     clone.succeed("stat /target/db")
-    clone.fail("stat /target/db/db")
     clone.wait_for_unit("multi-user.target")
     clone.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     clone.fail("stat /target/db/db")

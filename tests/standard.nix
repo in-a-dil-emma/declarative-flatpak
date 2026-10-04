@@ -61,6 +61,12 @@
         '';
       };
     };
+    overrides = {
+      services.flatpak = {
+        flatpakDir = "/target";
+        overrides."org.foobar.Foobar".Context.filesystems = [ "home" "host-os" ];
+      };
+    };
   };
 
   testScript = ''
@@ -98,5 +104,11 @@
     always.wait_for_unit("multi-user.target")
     always.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
     always.fail("stat /target/thisfileshouldnotpersist")
+
+    overrides.wait_for_unit("multi-user.target")
+    overrides.wait_until_succeeds("systemctl is-active -q complete.target", timeout=120)
+    overrides.succeed("stat /target/overrides/org.foobar.Foobar")
+    overrides.succeed("grep -q '[Context]' /target/overrides/org.foobar.Foobar")
+    overrides.succeed("grep -q 'filesystems=home;host-os' /target/overrides/org.foobar.Foobar")
   '';
 }
