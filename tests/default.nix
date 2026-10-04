@@ -6,4 +6,5 @@ let
 in linkFarm "declarative-flatpak-tests" {
   standard = runNixOSTest ./standard.nix;
   graphical = runNixOSTest ./graphical.nix;
+  exotic = runNixOSTest ./exotic.nix;
 }

@@ -292,7 +292,10 @@ let
           fi
         '';
         switch = ''
-          echo "Moving old data for future deletion"
+          echo "Installing flatpak data"
+          pushd "$NEW_FLATPAK_INSTALL"
+          touch repo/dirty
+
           # Special handling of db, because that is outside state we do not want to manage
           if [ -d db ]; then
             # in case the target dir already exists...
@@ -308,12 +311,10 @@ let
             fi
           }
 
-          echo "Installing flatpak data"
-          pushd "$NEW_FLATPAK_INSTALL"
-          touch repo/dirty
           for i in *; do
             mv "$i" "$CURRENT_FLATPAK_DIR"/"$i"
           done
+
           popd
           rm -- "$CURRENT_FLATPAK_DIR"/repo/dirty
         '';
