@@ -301,7 +301,9 @@ let
             # in case the target dir already exists...
             rsync -va --delete db/ "$CURRENT_FLATPAK_DIR"/db.new/
             rm -rf db
-            mv "$CURRENT_FLATPAK_DIR"/db{,.old}
+            if [ -d "$CURRENT_FLATPAK_DIR"/db ]; then
+              mv "$CURRENT_FLATPAK_DIR"/db{,.old}
+            fi
             mv "$CURRENT_FLATPAK_DIR"/db{.new,}
           fi
           {
