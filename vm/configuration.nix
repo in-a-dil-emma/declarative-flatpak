@@ -63,8 +63,8 @@ in
       "flathub-beta:app/org.mozilla.firefox//stable"
       "flathub:app/moe.launcher.honkers-launcher/x86_64/stable"
       "flathub:runtime/org.gtk.Gtk3theme.Breeze//3.22"
-      "flathub:${./files/io.gitlab.daikhan.stable.flatpakref}"
-      ":${./files/xwaylandvideobridge.flatpak}"
+      "flathub:${../files/io.gitlab.daikhan.stable.flatpakref}"
+      ":${../files/xwaylandvideobridge.flatpak}"
     ];
     remotes = {
       "flathub" = "https://flathub.org/repo/flathub.flatpakrepo";
