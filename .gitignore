@@ -2,3 +2,4 @@ result
 result-*
 .direnv/
 *.qcow2
+.vscode/

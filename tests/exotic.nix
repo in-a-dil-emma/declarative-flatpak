@@ -12,6 +12,7 @@
     };
 
     services.flatpak = {
+      flatpakDir = "/target";
       runWithoutGui = true;
       veryVerbose = true;
       enable = true;
@@ -28,13 +29,11 @@
 
   nodes = {
     double = {
-      services.flatpak.flatpakDir = "/target";
       systemd.tmpfiles.rules = [
         "d /target/db/db"
       ];
     };
     clone = {
-      services.flatpak.flatpakDir = "/target";
       systemd.tmpfiles.rules = [
         "d /target/db"
         "d /target/db/checkforme"

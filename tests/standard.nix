@@ -30,9 +30,7 @@
     bare = { };
     dirs = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
-      services.flatpak = {
-        flatpakDir = "/target";
-      };
+      services.flatpak.flatpakDir = "/target";
     };
     persist = {
       environment.variables.FLATPAK_SYSTEM_DIR = "/target";
