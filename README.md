@@ -206,6 +206,7 @@ Expressions in `{curly brackets}` must be substituted.
       ":${./foobar.flatpak}"
       "flathub:/root/testflatpak.flatpakref"
     ];
+    runWithoutGui = true;
     overrides = {
       # note: "global" is a flatpak thing
       # if you ever ran "flatpak override" without specifying a ref you will know
