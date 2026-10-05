@@ -165,12 +165,12 @@ let
           if [ -d "$DATA_DIR"/repo-save ]; then
             touch "$DATA_DIR"/repo-save/dirty
             mv "$DATA_DIR"/repo-save "$NEW_FLATPAK_INSTALL"/repo
-            ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
+            ostree fsck --delete --repo="$NEW_FLATPAK_INSTALL"/repo
           elif [ -d "$CURRENT_FLATPAK_DIR"/repo ] && [ ! -e "$CURRENT_FLATPAK_DIR"/repo/dirty ]; then
             echo "Recycling existing repo"
             touch "$CURRENT_FLATPAK_DIR"/repo/dirty
             cp -a --reflink=auto "$CURRENT_FLATPAK_DIR"/repo "$NEW_FLATPAK_INSTALL"/repo
-            ostree fsck --repo="$NEW_FLATPAK_INSTALL"/repo
+            ostree fsck --delete --repo="$NEW_FLATPAK_INSTALL"/repo
             rm -- "$CURRENT_FLATPAK_DIR"/repo/dirty
           else
             echo "Creating repo from scratch"
