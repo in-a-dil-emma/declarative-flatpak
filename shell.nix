@@ -5,14 +5,17 @@ let
 
   inherit (pkgs)
     mkShellNoCC
-    npins
     ncurses
     ostree
+    npins
     gawk
     jq
     ;
 in
 mkShellNoCC {
+  shellHook = ''
+    echo 'Nixpkgs is pinned to ${pkgs.lib.version}'
+  '';
   packages = [
     (treefmt.mkWrapper pkgs ./lib/treefmt.nix)
     ncurses
