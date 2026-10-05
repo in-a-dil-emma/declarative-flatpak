@@ -1,41 +1,21 @@
-{ pkgs, ... }: {
-  name = "NixOS test";
+{
+  name = "More general NixOS tests";
 
   defaults = {
     imports = [
-      ../nixos
+      ./shared.nix
     ];
-
-    systemd = {
-      services."manage-flatpaks-activation".onSuccess = [ "complete.target" ];
-      targets."complete".enable = true;
-    };
-
-    services.flatpak = {
-      runWithoutGui = true;
-      veryVerbose = true;
-      enable = true;
-    };
-
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal
-      ];
-      config.common.default = "*";
-    };
   };
 
   nodes = {
-    bare = { };
+    bare = {
+      # Internal logic in module/internal-options.nix resets this value to default.
+      services.flatpak.flatpakDir = null;
+    };
     dirs = {
-      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
-      services.flatpak.flatpakDir = "/target";
     };
     persist = {
-      environment.variables.FLATPAK_SYSTEM_DIR = "/target";
       services.flatpak = {
-        flatpakDir = "/target";
         alwaysRunOnActivation = true;
         UNCHECKEDfinalizeCommand = ''
           # This check ensures that these files are created only once...

@@ -1,30 +1,10 @@
-{ pkgs, ... }: {
-  name = "NixOS test";
+{
+  name = "Handling of previous state and other various exotic setups on NixOS";
 
   defaults = {
     imports = [
-      ../nixos
+      ./shared.nix
     ];
-
-    systemd = {
-      services."manage-flatpaks-activation".onSuccess = [ "complete.target" ];
-      targets."complete".enable = true;
-    };
-
-    services.flatpak = {
-      flatpakDir = "/target";
-      runWithoutGui = true;
-      veryVerbose = true;
-      enable = true;
-    };
-
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal
-      ];
-      config.common.default = "*";
-    };
   };
 
   nodes = {

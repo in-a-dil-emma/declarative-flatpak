@@ -1,36 +1,18 @@
-{ pkgs, ... }: {
-  name = "NixOS test";
+{
+  name = "Tests in \"graphical\" sessions for NixOS";
 
   defaults = {
     imports = [
-      ../nixos
+      ./shared.nix
     ];
 
-    systemd = {
-      services."manage-flatpaks-activation".onSuccess = [ "complete.target" ];
-      targets = {
-        "complete".enable = true;
-        "graphical".enable = true;
-      };
-    };
+    systemd.targets."graphical".enable = true;
 
-    services.flatpak = {
-      runWithoutGui = false;
-      veryVerbose = true;
-      enable = true;
-    };
-
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal
-      ];
-      config.common.default = "*";
-    };
+    services.flatpak.runWithoutGui = false;
   };
 
   nodes = {
-    graphical = {};
+    graphical = { };
   };
 
   testScript = ''
