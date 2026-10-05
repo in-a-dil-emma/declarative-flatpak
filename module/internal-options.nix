@@ -18,22 +18,16 @@ in
 {
   options.services.flatpak.internal = {
     overrideFiles = mkOption {
-      internal = true;
       default = pipe config.services.flatpak.overrides [
         (mapAttrs (name: ini.generate "flatpak-override-${name}"))
       ];
     };
     targetDir = mkOption {
-      internal = true;
       apply = fallback cfg.flatpakDir;
     };
     mainScript = {
-      activation = mkOption {
-        internal = true;
-      };
-      auto = mkOption {
-        internal = true;
-      };
+      activation = mkOption { };
+      auto = mkOption { };
     };
   };
 }
