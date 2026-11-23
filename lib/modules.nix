@@ -20,5 +20,11 @@ rec {
       (mkIf (guard && cond) yes)
       (mkIf (guard && !cond) no)
     ];
+  mkIfElseIfNot =
+    guard: cond: yes: no:
+    mkMerge [
+      (mkIf (!guard && cond) yes)
+      (mkIf (!guard && !cond) no)
+    ];
   mkMergeIf = cond: mkIf cond mkMerge;
 }

@@ -3,6 +3,7 @@
 let
   xlib = import ../lib/modules.nix { inherit lib; };
   inherit (xlib)
+    mkIfElseIfNot
     mkIfElseIf
     mkIfElse
     ;
@@ -52,6 +53,10 @@ in
     services."manage-flatpaks-activation" = applyServiceConfig {
       serviceConfig.ExecStart = config.services.flatpak.internal.mainScript.activation;
       wantedBy = mkIfElse cfg.runWithoutGui [ "multi-user.target" ] [ "graphical.target" ];
+      after =
+        mkIfElseIfNot cfg.delayStartup cfg.runWithoutGui
+          [ "multi-user.target" ]
+          [ "graphical.target" ];
       before =
         mkIfElseIf cfg.delayStartup cfg.runWithoutGui
           [ "systemd-user-sessions.service" ]
