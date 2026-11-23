@@ -42,7 +42,10 @@
     overrides = {
       services.flatpak = {
         flatpakDir = "/target";
-        overrides."org.foobar.Foobar".Context.filesystems = [ "home" "host-os" ];
+        overrides."org.foobar.Foobar".Context.filesystems = [
+          "home"
+          "host-os"
+        ];
       };
     };
   };
